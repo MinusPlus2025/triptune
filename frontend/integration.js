@@ -26,7 +26,7 @@
   // intentionally disabled until a trip has been generated and persisted.
   window.tripTuneCanNavigate = (viewKey) => {
     if (["02", "03", "04", "05"].includes(String(viewKey)) && !state.itinerary) {
-      toast("请先在出发简报填写目的地并生成旅程");
+      toast("请先填写目的地，生成一份行程");
       return false;
     }
     return true;
@@ -780,10 +780,10 @@
     const feedbackCount = proof?.feedbackUsed ?? itinerary.explanation?.feedbackEvidenceCount ?? 0;
     panel.innerHTML = `
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <strong class="text-brand-800">本次旅程不是预置结果</strong>
-        <span class="font-mono text-[10px] text-brand-700">SQLITE · ${itinerary.engine || "RULES"}</span>
+        <strong class="text-brand-800">这次旅行，按你的想法安排</strong>
+        <span class="text-xs text-brand-700">行程已保存</span>
       </div>
-        <p class="mt-1.5 leading-relaxed">已从${itinerary.destination}地点库中，用旅人、${itinerary.durationDays} 天、¥${Number(itinerary.budget || 0).toLocaleString("zh-CN")}、${itinerary.partySize} 人、${itinerary.pace} 节奏与「${selected}」重新计算；同时参考 ${feedbackCount} 条历史反馈并保存本次请求和结果。</p>
+        <p class="mt-1.5 leading-relaxed">${itinerary.destination} · ${itinerary.durationDays} 天 · ${itinerary.partySize} 人同行，预算 ¥${Number(itinerary.budget || 0).toLocaleString("zh-CN")}。围绕「${selected}」安排，也参考了你之前的 ${feedbackCount} 条反馈。想换个节奏？可以随时调整。</p>
     `;
   }
 
@@ -1370,9 +1370,9 @@
       await loadProfileAndItinerary(next);
       window.localStorage.setItem("triptune-profile", next);
       closeProfileEditor();
-      toast(`已切换旅人为：${state.profile?.name || next}`);
+      toast(`已切换到：${state.profile?.name || next}`);
     } catch (error) {
-      toast("暂时无法切换旅人，请稍后重试");
+      toast("暂时无法切换档案，请稍后重试");
     }
   }
 
@@ -1597,7 +1597,7 @@
     page.innerHTML = `
       <header><h2 class="text-2xl font-bold text-slate-900">我的旅行</h2><p class="mt-2 text-sm text-slate-600">管理你的偏好，也随时接着上一次的旅程出发。</p></header>
       <div class="bg-white rounded-xl border thin-border p-5 sm:p-6 flex flex-wrap items-center justify-between gap-4">
-        <div><h3 id="personalName" class="text-xl font-semibold text-brand-800">正在读取资料…</h3><p class="mt-2 text-xs text-slate-500">当前为测试旅人档案</p></div>
+        <div><h3 id="personalName" class="text-xl font-semibold text-brand-800">正在读取资料…</h3><p class="mt-2 text-xs text-slate-500">共享体验档案，请勿填写个人隐私</p></div>
         <button id="personalEdit" class="px-4 py-2.5 rounded-lg bg-brand-700 text-white text-sm font-semibold">编辑资料与偏好</button>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
