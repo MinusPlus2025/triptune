@@ -376,7 +376,7 @@
       ? (isEnglish ? `${destination} · ${state.itinerary.durationDays}-day trip ready` : `${destination} · ${state.itinerary.durationDays} 天行程已准备`)
       : (isEnglish ? "Complete your preferences to build a real route" : "填写偏好后生成真实路线"));
     setText("#flightRouteLabel", `${flightCode} · ${destination === pendingDestination ? (isEnglish ? "DESTINATION PENDING" : "目的地待生成") : (isEnglish ? `TO ${destination}` : `目的地 ${destination}`)}`);
-    setText("#flightStatusLabel", `${state.profile?.name || (isEnglish ? "Traveler" : "旅人")} · ${destination === pendingDestination ? (isEnglish ? "DESTINATION PENDING" : "等待目的地") : destination} · ${status}`);
+    setText("#flightStatusLabel", `${state.profile?.name || (isEnglish ? "Traveler" : "用户")} · ${destination === pendingDestination ? (isEnglish ? "DESTINATION PENDING" : "等待目的地") : destination} · ${status}`);
     setText("#boardingFlightCode", flightCode);
     setText("#boardingIssuedDate", date);
     setText("#boardingSeatGate", `${seat} / ${destinationCode}`);
@@ -1241,7 +1241,7 @@
     setText("#keepsakeCityStamp", `${itinerary.destination}旅程纪念邮戳`);
     setText("#keepsakeBadge1", `${nodes[0]?.tags?.[0] || "旅行偏好"}纪念章`);
     setText("#keepsakeBadge1Meta", `${city?.code || "TT"} · PERSONAL SIGNAL`);
-    setText("#keepsakeTravelerStub", `${state.profile?.name || "旅人"} · 18A`);
+    setText("#keepsakeTravelerStub", `${state.profile?.name || "用户"} · 18A`);
     setText("#keepsakeFlightStub", `TT-${String(itinerary.id || "LIVE").slice(-4).toUpperCase()}`);
     setI18n("recapHigh1Title", nodes[0]?.title || `${itinerary.destination}路线高光`);
     setI18n("recapHigh1Desc", nodes[0]?.desc || "已将本次选择保存为旅行记忆。");
@@ -1310,7 +1310,7 @@
     setText("#archiveCode", "ARCHIVE TT-CITY-2026");
     setText("#keepsakeCityCode", "CITY");
     setText("#keepsakeCityStamp", "当前城市旅程纪念邮戳");
-    setText("#keepsakeTravelerStub", "当前旅人 · 18A");
+    setText("#keepsakeTravelerStub", "当前档案 · 18A");
     setText("#keepsakeFlightStub", "等待生成");
     setI18n("recapHigh1Title", "等待本次旅程生成");
     setI18n("recapHigh1Desc", "生成旅程后，这里会显示本次路线高光。");
@@ -1650,7 +1650,7 @@
         };
         list.appendChild(row);
       }
-      if (!trips.length) { const empty = document.createElement("p"); empty.className = "p-5 text-sm text-slate-500"; empty.textContent = "还没有保存的旅程。填写出发简报，开始第一段旅行。"; list.appendChild(empty); }
+      if (!trips.length) { const empty = document.createElement("p"); empty.className = "p-5 text-sm text-slate-500"; empty.textContent = "还没有保存的旅程。填写规划旅行，开始第一段旅行。"; list.appendChild(empty); }
     } catch (error) {
       setText("#personalTrips", "暂时无法读取旅程");
       setText("#personalError", `加载失败：${error.message}。请重新点击「我的」重试。`);

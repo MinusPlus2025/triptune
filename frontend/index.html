@@ -582,7 +582,7 @@
 <button class="flex items-center gap-2.5 text-left rounded-lg" id="openProfileEditor" type="button" aria-label="编辑我的旅行偏好">
 <div class="w-7 h-7 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs font-bold" id="travelerAvatar">LM</div>
 <div>
-<div class="text-[10px] tracking-wider uppercase text-slate-400 font-medium" data-i18n="activeTraveler">当前旅人</div>
+<div class="text-[10px] tracking-wider uppercase text-slate-400 font-medium" data-i18n="activeTraveler">当前档案</div>
 <div class="text-xs font-semibold text-slate-800 mt-0.5" id="travelerNameDisplay">林默</div>
 </div>
 </button>
@@ -603,7 +603,7 @@
 <button class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-bold text-brand-700 bg-brand-50 border border-brand-200 shadow-sm" data-nav="01" onclick="switchView('01')">
 <div class="flex items-center gap-2.5">
 <span class="material-symbols-outlined text-[17px]">tune</span>
-<span data-i18n="navBrief" class="">出发简报</span>
+<span data-i18n="navBrief" class="">规划旅行</span>
 </div>
 <span class="text-[10px] font-mono text-slate-400">01</span>
 </button>
@@ -1304,8 +1304,8 @@
 <span class="text-[8px] font-mono font-bold mt-0.5" id="keepsakeFlightStub">等待生成</span>
 <span class="text-[7px] font-mono">FIRST CLASS</span>
 </div>
-<div class="text-[11px] font-bold text-slate-800 mt-2.5">首发旅人存根</div>
-<div class="text-[9px] font-mono text-slate-400 mt-0.5" id="keepsakeTravelerStub">当前旅人 · 18A</div>
+<div class="text-[11px] font-bold text-slate-800 mt-2.5">旅行纪念</div>
+<div class="text-[9px] font-mono text-slate-400 mt-0.5" id="keepsakeTravelerStub">当前档案 · 18A</div>
 </div>
 </div>
 </div>
@@ -1389,7 +1389,7 @@
 <footer class="h-8 bg-white border-t thin-border px-6 flex items-center justify-between text-[11px] text-slate-400 shrink-0 font-mono" data-purpose="bottom-notice-bar">
 <div class="flex items-center gap-2">
 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-<span data-i18n="demoNotice" class="">实时生成 · SQLite 已连接</span>
+<span data-i18n="demoNotice" class="">共享体验版 · 请勿填写隐私信息</span>
 </div>
 <div class="tracking-wider">TripTune · Personal Travel Engine</div>
 </footer>
@@ -1430,10 +1430,10 @@
 <div>
 <label class="block text-xs font-semibold text-slate-700 mb-1.5" for="profileInterests">长期兴趣</label>
 <textarea class="w-full min-h-24 rounded-lg border thin-border bg-slate-50 px-3 py-2.5 text-sm leading-relaxed" id="profileInterests" maxlength="260" placeholder="用逗号分隔，例如：建筑、早市、书店"></textarea>
-<p class="mt-1.5 text-[11px] text-slate-500">最多 12 项；也可以在出发简报里为某一次旅程临时添加。</p>
+<p class="mt-1.5 text-[11px] text-slate-500">最多 12 项；也可以在规划旅行里为某一次旅程临时添加。</p>
 </div>
 <p aria-live="polite" class="hidden rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700" id="profileEditorError"></p>
-<button class="text-left text-xs font-semibold text-brand-700 hover:underline" id="switchProfileTraveler" type="button">切换到另一位测试旅人</button>
+<button class="text-left text-xs font-semibold text-brand-700 hover:underline" id="switchProfileTraveler" type="button">切换到另一位体验档案</button>
 <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-1">
 <button class="px-4 py-2.5 rounded-lg border thin-border text-sm font-semibold text-slate-700" id="cancelProfileEditor" type="button">取消</button>
 <button class="px-5 py-2.5 rounded-lg bg-brand-700 text-white text-sm font-semibold" id="saveProfileEditor" type="submit">保存并用于下一次生成</button>
@@ -1475,12 +1475,12 @@
   /**
    * Pure Bilingual Dictionary
    * Strictly pure Chinese for 'zh' and strictly pure English for 'en'.
-   * Never combine them into hybrid strings like "出发简报 (Departure Brief)".
+   * Never combine them into hybrid strings like "规划旅行 (Departure Brief)".
    */
   const i18n = {
     zh: {
-      activeTraveler: "当前旅人",
-      navBrief: "出发简报",
+      activeTraveler: "当前档案",
+      navBrief: "规划旅行",
       navOverview: "旅程导览",
       navRoam: "今日漫游",
       navReroute: "途中改线",
@@ -1492,7 +1492,7 @@
       flightSpeed: "行程状态：准备生成",
       flightTime: "本地时间：正在同步",
       tab00: "登机入口",
-      tab01: "出发简报",
+      tab01: "规划旅行",
       tab02: "旅程导览",
       tab03: "今日漫游",
       tab04: "途中改线",
@@ -1613,7 +1613,7 @@
       nextMemory: "下一次推荐预设",
       nextMemoryVal: "下一次旅程将继续使用本次反馈",
       btnExportArchive: "导出行程",
-      demoNotice: "实时生成 · SQLite 已连接",
+      demoNotice: "共享体验版 · 请勿填写隐私信息",
       toastPlanGenerated: "已根据你的旅行偏好生成旅程。",
       toastRerouted: "新路线已同步至今日漫游。",
       toastFeedbackRecorded: "反馈已记录，下次会据此调整安排。",
@@ -1842,7 +1842,7 @@
     }
     currentTraveler = currentTraveler === 'lin' ? 'zhou' : 'lin';
     updateTravelerUI();
-    showToast(currentLang === 'zh' ? `已切换旅人为：${travelerData[currentTraveler].zh.name}` : `Switched voyager to: ${travelerData[currentTraveler].en.name}`);
+    showToast(currentLang === 'zh' ? `已切换用户为：${travelerData[currentTraveler].zh.name}` : `Switched voyager to: ${travelerData[currentTraveler].en.name}`);
   }
 
   function updateTravelerUI() {
