@@ -1,0 +1,1970 @@
+<!DOCTYPE html><html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport">
+<title>TripTune · Your trip, tuned to you.</title>
+<!-- Tailwind CSS v3 with plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Material Symbols & Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f7fa',
+              100: '#dbebf2',
+              200: '#bfd9e4',
+              400: '#4f8296',
+              500: '#1d546b',
+              600: '#0f3d4c',
+              700: '#002632',
+              800: '#001f2a',
+              900: '#00141b'
+            },
+            nordic: {
+              bg: '#faf8ff',
+              card: '#ffffff',
+              line: '#e2e7ff',
+              muted: '#71787c',
+              ink: '#131b2e',
+              tint: '#3b6474',
+              accent: '#ff7b44'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="nordic-layout">
+    :root {
+      --modal-open-dur: 250ms;
+      --modal-close-dur: 150ms;
+      --modal-scale: 0.96;
+      --modal-scale-close: 0.96;
+      --modal-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    body {
+      background-color: #faf8ff;
+      color: #131b2e;
+      -webkit-font-smoothing: antialiased;
+    }
+    main { min-width: 0; }
+    img, svg { max-width: 100%; }
+    /* Stitch photos are illustrative only; the API supplies text/data for the
+       selected city. Keep an unmatched photo from implying a different city. */
+    .city-cover { position: relative; margin: 0; overflow: hidden; }
+    .city-cover[hidden] { display: none; }
+    .city-cover img { display: block; width: 100%; height: clamp(150px, 20vw, 220px); object-fit: cover; }
+    .city-cover figcaption { position: absolute; bottom: 0; left: 0; right: 0; padding: 24px 12px 8px; background: linear-gradient(transparent, rgba(15,23,42,.85)); color: white; font-size: 11px; }
+    .city-cover a { color: inherit; text-decoration: underline; }
+    .z-15 { z-index: 15; }
+    button, [role="button"] { user-select: none; }
+    button:disabled { cursor: not-allowed; opacity: 0.48; }
+    .editable-surface { cursor: pointer; }
+    .editable-surface:hover { border-color: #bfd9e4; box-shadow: 0 8px 24px rgba(15, 61, 76, 0.08); }
+    #windowViewport { touch-action: none; }
+    .window-cloud {
+      position: absolute;
+      width: 5.5rem;
+      height: 1.6rem;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.72);
+      filter: blur(1px);
+      animation: cloud-drift var(--cloud-speed, 18s) linear infinite;
+      will-change: transform;
+    }
+    .window-cloud::before, .window-cloud::after {
+      position: absolute;
+      content: "";
+      border-radius: 999px;
+      background: inherit;
+    }
+    .window-cloud::before { width: 2.8rem; height: 2.8rem; left: 0.8rem; top: -1.35rem; }
+    .window-cloud::after { width: 2.2rem; height: 2.2rem; right: 0.65rem; top: -0.95rem; }
+    .window-cloud.cloud-a { top: 27%; left: -55%; --cloud-speed: 19s; }
+    .window-cloud.cloud-b { top: 58%; left: -70%; opacity: 0.55; transform: scale(0.72); --cloud-speed: 25s; animation-delay: -11s; }
+    .window-cloud.cloud-c { top: 78%; left: -45%; opacity: 0.42; transform: scale(1.18); --cloud-speed: 31s; animation-delay: -19s; }
+    .window-plane {
+      position: absolute;
+      z-index: 5;
+      top: 42%;
+      left: -20%;
+      color: rgba(15, 61, 76, 0.62);
+      font-size: 2rem !important;
+      transform: rotate(90deg);
+      text-shadow: 0 8px 14px rgba(15, 23, 42, 0.22);
+      animation: plane-cross 16s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+      will-change: transform, left, top;
+    }
+    #windowShade { min-height: 2.3rem; cursor: ns-resize; touch-action: none; }
+    #windowShadeGrip { min-height: 2rem; cursor: ns-resize; }
+    #planeWindowOuter { width: 240px; height: 360px; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
+    #planeWindowOuter > div { padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
+    #windowViewport { border-radius: 0; background: transparent; box-shadow: none; }
+    #windowViewport::after { content: ''; position: absolute; inset: 12% 9% 16%; border: 14px solid #e9e8e3; border-radius: 56px; box-shadow: inset 0 0 0 3px #264d58, inset 0 5px 9px #172f3740, 0 12px 24px #131b2326; pointer-events: none; z-index: 30; }
+    #skyDayBg, #skyNightBg { clip-path: inset(19% 19% 25% round 35%); }
+    #windowGlassOverlay { visibility: hidden; }
+    .window-shade-track { position: absolute; inset: 0; z-index: 20; clip-path: inset(12% 9% 16% round 28%); pointer-events: none; }
+    .window-shade-track::before { content: ''; position: absolute; inset: 0; background: #ada395; opacity: 0; filter: brightness(var(--cabin-frame-light)); pointer-events: none; }
+    .window-shade-track.is-sealed::before { opacity: 1; transition: opacity 80ms 440ms; }
+    .window-shade-track #windowShade { pointer-events: auto; }
+    #windowShade { height: 100% !important; min-height: 0; border: 0; border-radius: 0; background: linear-gradient(100deg, #b6b4aa, #e4e0d4 48%, #c8c4b8); box-shadow: none; overflow: visible; clip-path: inset(0 0 17%); transition: transform 520ms cubic-bezier(.16,1,.3,1); }
+    #windowShadeGrip { position: absolute; bottom: 20%; left: 20%; right: 20%; width: 60%; height: 44px; background: transparent; border: none; }
+    #windowShadeGrip > div { opacity: 1; width: 52px; height: 5px; background: #51666a; border-radius: 3px; box-shadow: 0 1px 0 #f5efe3; }
+    #windowShadeGrip:focus-visible { outline: 2px solid #155e75; outline-offset: -4px; border-radius: 12px; }
+    .window-paused *, .window-paused *::before, .window-paused *::after { animation-play-state: paused !important; }
+    [data-nav][hidden] { display: none !important; }
+    [data-nav][aria-current="page"], nav[aria-label="当前旅程操作"] [aria-current="page"] { background: #eaf3f5; color: #0f3d4c; font-weight: 700; }
+    :root { --cabin-closed: 0%; --cabin-frame-light: 1; }
+    #workspaceContainer:has(#view-00:not(.hidden)) {
+      background-color: color-mix(in srgb, #201e1c var(--cabin-closed), #f8f9fc);
+      transition: background-color 520ms cubic-bezier(.16,1,.3,1);
+    }
+    #view-00 > div {
+      background-color: color-mix(in srgb, #302b25 var(--cabin-closed), #fff);
+      border-color: color-mix(in srgb, #51483b var(--cabin-closed), #e2e7ef);
+      transition: background-color 520ms, border-color 520ms;
+    }
+    #view-00 [data-purpose="boarding-content"] > .text-center :is(h1,p,div),
+    #view-00 [data-i18n="skipSwipe"], #view-00 [data-purpose="boarding-content"] > .relative > button {
+      color: color-mix(in srgb, #f1e4cf var(--cabin-closed), #334155);
+      transition: color 520ms;
+    }
+    #view-00 [data-purpose="boarding-pass"] {
+      background-color: color-mix(in srgb, #e7dbc5 var(--cabin-closed), #f8fafc);
+      transition: background-color 520ms;
+    }
+    #view-00 [data-purpose="boarding-pass"] :is(.text-slate-400,.text-slate-500) { color: #58606b; }
+    #windowViewport::after, #windowShade {
+      filter: brightness(var(--cabin-frame-light));
+      transition: filter 520ms, transform 520ms cubic-bezier(.16,1,.3,1);
+    }
+    .cabin-dragging #workspaceContainer, .cabin-dragging #view-00 *, .cabin-dragging #windowViewport::after { transition-duration: 0ms !important; }
+    @media (prefers-reduced-motion: reduce) {
+      #windowViewport *, #windowViewport *::before, #windowViewport *::after { animation: none !important; transition-duration: 0.01ms !important; }
+    }
+    @keyframes cloud-drift { from { transform: translateX(0); } to { transform: translateX(23rem); } }
+    @keyframes plane-cross {
+      0% { left: -20%; top: 54%; transform: rotate(87deg) scale(0.78); opacity: 0; }
+      12% { opacity: 0.72; }
+      52% { top: 40%; transform: rotate(92deg) scale(1); }
+      88% { opacity: 0.72; }
+      100% { left: 112%; top: 31%; transform: rotate(88deg) scale(0.84); opacity: 0; }
+    }
+    .t-modal {
+      transform-origin: center;
+      transform: scale(var(--modal-scale));
+      opacity: 0;
+      pointer-events: none;
+      transition:
+        transform var(--modal-open-dur) var(--modal-ease),
+        opacity   var(--modal-open-dur) var(--modal-ease);
+      will-change: transform, opacity;
+    }
+    .t-modal.is-open {
+      transform: scale(1);
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .t-modal.is-closing {
+      transform: scale(var(--modal-scale-close));
+      opacity: 0;
+      pointer-events: none;
+      transition:
+        transform var(--modal-close-dur) var(--modal-ease),
+        opacity   var(--modal-close-dur) var(--modal-ease);
+    }
+    dialog::backdrop { background: rgba(0, 20, 27, 0.5); backdrop-filter: blur(4px); }
+    :focus-visible { outline: 2px solid #0f3d4c; outline-offset: 3px; }
+    #toastNotification[aria-hidden="false"] { pointer-events: auto; }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+      .t-modal { transition: none !important; }
+    }
+    @media (max-width: 1279px) {
+      [data-purpose="top-page-tabs"] { display: none !important; }
+    }
+    @media (min-width: 768px) and (max-width: 1023px) {
+      aside[data-purpose="main-sidebar"] { width: 5rem; }
+      [data-purpose="sidebar-brand"] { padding: 0.75rem 0.5rem; }
+      [data-purpose="sidebar-brand"] > div { justify-content: center; }
+      [data-purpose="sidebar-brand"] > div > div:last-child,
+      [data-purpose="traveler-card"],
+      aside[data-purpose="main-sidebar"] > div:last-child { display: none; }
+      [data-purpose="sidebar-nav"] { padding: 0.5rem 0.35rem; }
+      [data-purpose="sidebar-nav"] .nav-item {
+        min-height: 3.5rem;
+        padding: 0.4rem 0.15rem !important;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0;
+      }
+      [data-purpose="sidebar-nav"] .nav-item > div {
+        min-width: 0;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.15rem;
+      }
+      [data-purpose="sidebar-nav"] .nav-item > div > .material-symbols-outlined {
+        font-size: 20px !important;
+        line-height: 1;
+      }
+      [data-purpose="sidebar-nav"] .nav-item > div > span:last-child {
+        max-width: 100%;
+        overflow: hidden;
+        font-size: 10px;
+        line-height: 1.15;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      [data-purpose="sidebar-nav"] .nav-item > span:last-child { display: none; }
+      [data-purpose="mobile-traveler-switch"] {
+        display: inline-flex;
+        width: 2.75rem;
+        height: 2.75rem;
+        min-height: 2.75rem;
+        align-items: center;
+        justify-content: center;
+      }
+      main > header { padding-left: 1rem; padding-right: 1rem; }
+      #workspaceContainer { padding: 1.5rem; }
+      [data-purpose="overview-metrics"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      [data-purpose="feedback-bar"] {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      [data-purpose="route-map-toolbar"] {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      [data-purpose="route-map-legend"] { flex-wrap: wrap; }
+      [data-purpose="reroute-comparison"] { grid-template-columns: minmax(0, 1fr); }
+    }
+    @media (min-width: 768px) and (max-width: 1279px) {
+      [data-purpose="brief-layout"],
+      [data-purpose="overview-layout"],
+      [data-purpose="keepsake-layout"] {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      [data-purpose="brief-primary"],
+      [data-purpose="overview-primary"],
+      [data-purpose="keepsake-primary"] { grid-column: auto; }
+    }
+    [data-purpose="mobile-route-summary"],
+    [data-purpose="mobile-traveler-switch"] { display: none; }
+    @media (min-width: 768px) and (max-width: 1023px) {
+      [data-purpose="mobile-traveler-switch"] { display: inline-flex; }
+    }
+    @media (max-width: 767px) {
+      html, body { width: 100%; height: 100%; overflow: hidden; }
+      body.h-screen { height: 100dvh; min-height: 100dvh; }
+      main.h-full { width: 100%; height: 100dvh; min-height: 0; }
+
+      aside[data-purpose="main-sidebar"] {
+        position: fixed;
+        inset: auto 0 0 0;
+        width: 100%;
+        height: calc(4.25rem + env(safe-area-inset-bottom));
+        display: block;
+        padding-bottom: env(safe-area-inset-bottom);
+        border-top: 1px solid #e2e7ff;
+        border-right: 0;
+        box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.07);
+        z-index: 50;
+      }
+      aside[data-purpose="main-sidebar"] > div:first-child { width: 100%; height: 100%; }
+      [data-purpose="sidebar-brand"],
+      [data-purpose="traveler-card"],
+      aside[data-purpose="main-sidebar"] > div:last-child { display: none; }
+      [data-purpose="sidebar-nav"] {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.125rem;
+        width: 100%;
+        height: 100%;
+        padding: 0.25rem 0.2rem 0.35rem;
+      }
+      [data-purpose="sidebar-nav"] > :not([hidden]) ~ :not([hidden]) { margin-top: 0; }
+      [data-purpose="sidebar-nav"] .nav-item {
+        width: auto;
+        min-width: 0;
+        min-height: 3.5rem;
+        padding: 0.3rem 0.1rem !important;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0;
+        border-radius: 0.625rem;
+      }
+      [data-purpose="sidebar-nav"] .nav-item > div {
+        min-width: 0;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.15rem;
+      }
+      [data-purpose="sidebar-nav"] .nav-item > div > .material-symbols-outlined {
+        font-size: 20px !important;
+        line-height: 1;
+      }
+      [data-purpose="sidebar-nav"] .nav-item > div > span:last-child {
+        max-width: 100%;
+        overflow: hidden;
+        font-size: 10px;
+        line-height: 1.15;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      [data-purpose="sidebar-nav"] .nav-item > span:last-child { display: none; }
+
+      main > header {
+        min-height: calc(3.5rem + env(safe-area-inset-top));
+        height: auto;
+        padding: max(0.5rem, env(safe-area-inset-top)) 0.75rem 0.5rem;
+        gap: 0.5rem;
+      }
+      main > header > div:first-child { min-width: 0; gap: 0.45rem; }
+      main > header [data-i18n="flightRoute"] {
+        display: block;
+        max-width: clamp(7rem, 35vw, 10.5rem);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      [data-purpose="mobile-traveler-switch"] {
+        display: inline-flex;
+        width: 2.75rem;
+        height: 2.75rem;
+        min-height: 2.75rem;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+      }
+      [data-purpose="language-switcher"] button {
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+      }
+
+      #workspaceContainer {
+        min-width: 0;
+        padding: 0.875rem;
+        padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+        overscroll-behavior-y: contain;
+        scroll-padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+      }
+      #workspaceContainer > section { width: 100%; max-width: 100%; }
+      #workspaceContainer > section > .flex.items-center.justify-between.pb-4.border-b {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      #workspaceContainer > section > .flex.items-center.justify-between.pb-4.border-b > button {
+        width: 100%;
+        min-height: 2.75rem;
+        justify-content: center;
+      }
+      #workspaceContainer p { font-size: 0.8125rem; line-height: 1.55; }
+      #workspaceContainer .text-xs { font-size: 0.8125rem; line-height: 1.45; }
+      #workspaceContainer .text-\[10px\],
+      #workspaceContainer .text-\[11px\] { font-size: 0.75rem; line-height: 1.4; }
+      #workspaceContainer input,
+      #workspaceContainer select,
+      #workspaceContainer textarea { min-height: 2.75rem; font-size: 16px !important; }
+      #workspaceContainer button { min-height: 2.75rem; touch-action: manipulation; }
+      .interest-tag { min-height: 2.5rem; }
+
+      #view-00 { min-height: auto; padding-top: 0; padding-bottom: 0; }
+      [data-purpose="boarding-content"] { padding: 1.25rem; }
+      [data-purpose="boarding-status"] { padding-left: 1rem; padding-right: 1rem; }
+      [data-purpose="boarding-pass"] { padding: 1rem; }
+      [data-purpose="boarding-controls"] { flex-wrap: wrap; width: 100%; }
+      [data-purpose="boarding-controls"] button { flex: 1 1 8rem; justify-content: center; }
+      [data-purpose="boarding-pass-header"] { align-items: flex-start; flex-wrap: wrap; gap: 0.75rem; }
+      [data-purpose="boarding-pass"] .barcode-lines { max-width: 7.5rem; }
+
+      [data-purpose="trip-basics-grid"] { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+      [data-purpose="pace-grid"] { gap: 0.5rem; }
+      [data-purpose="pace-grid"] > label { padding: 0.75rem 0.35rem; }
+      [data-purpose="overview-metrics"] { gap: 0.75rem; }
+      [data-purpose="overview-metrics"] > div { min-width: 0; padding: 0.875rem; gap: 0.625rem; }
+      [data-purpose="day-card-footer"] { align-items: flex-start; flex-direction: column; gap: 0.65rem; }
+
+      [data-purpose="route-map-toolbar"] {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      [data-purpose="route-map-legend"] { flex-wrap: wrap; gap: 0.5rem 0.75rem; }
+      [data-purpose="golden-hour-badge"] {
+        right: 0.75rem;
+        max-width: calc(100% - 1.5rem);
+        line-height: 1.35;
+      }
+      [data-purpose="feedback-bar"] {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      [data-purpose="feedback-bar"] > div {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.4rem;
+        width: 100%;
+      }
+      [data-purpose="feedback-bar"] button {
+        min-width: 0;
+        min-height: 2.75rem;
+        padding-left: 0.35rem;
+        padding-right: 0.35rem;
+        justify-content: center;
+      }
+      [data-purpose="activity-meta"] {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.4rem;
+      }
+      [data-purpose="activity-meta"] > div { flex-wrap: wrap; }
+
+      #view-04 > .grid.grid-cols-2 { gap: 0.5rem; }
+      #view-04 .incident-btn { min-height: 5rem; padding: 0.75rem; }
+
+      #view-04 > .flex.justify-end button { width: 100%; justify-content: center; }
+      [data-purpose="reroute-card-header"],
+      [data-purpose="keepsake-section-header"] { align-items: flex-start; flex-wrap: wrap; gap: 0.5rem; }
+      [data-purpose="keepsake-artifacts"] { gap: 0.45rem; }
+      [data-purpose="keepsake-artifacts"] > div { min-width: 0; padding: 0.55rem; }
+      [data-purpose="preference-metrics"] { gap: 0.4rem; }
+      [data-purpose="preference-metrics"] > div { min-width: 0; padding: 0.6rem 0.35rem; }
+      #feedbackLogContainer > div { gap: 0.75rem; }
+      #feedbackLogContainer > div > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+      #feedbackLogContainer > div > span:last-child { flex: 0 0 auto; }
+
+      footer[data-purpose="bottom-notice-bar"] { display: none; }
+      #toastNotification {
+        right: 0.875rem;
+        bottom: calc(5rem + env(safe-area-inset-bottom));
+        left: 0.875rem;
+        justify-content: center;
+      }
+    }
+    @media (max-width: 479px) {
+      [data-purpose="route-map-viewport"] { display: none; }
+      [data-purpose="mobile-route-summary"] {
+        display: grid;
+        gap: 0;
+        padding: 0.75rem 1rem;
+        background: #ffffff;
+      }
+      [data-purpose="mobile-route-stop"] {
+        position: relative;
+        display: grid;
+        grid-template-columns: 2.25rem minmax(0, 1fr);
+        gap: 0.75rem;
+        min-height: 4.25rem;
+      }
+      [data-purpose="mobile-route-stop"]:not(:last-child)::after {
+        position: absolute;
+        top: 1.85rem;
+        bottom: -0.35rem;
+        left: 1.05rem;
+        width: 1px;
+        content: "";
+        background: #bfd9e4;
+      }
+      [data-purpose="mobile-route-number"] {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        width: 2.1rem;
+        height: 2.1rem;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #bfd9e4;
+        border-radius: 9999px;
+        background: #f0f7fa;
+        color: #0f3d4c;
+        font: 600 0.75rem/1 JetBrains Mono, monospace;
+      }
+      [data-purpose="mobile-route-stop"] > div:last-child { min-width: 0; padding-top: 0.1rem; }
+    }
+    @media (max-width: 359px) {
+      [data-purpose="trip-basics-grid"] { grid-template-columns: 1fr; }
+      [data-purpose="pace-grid"],
+      [data-purpose="overview-metrics"] { grid-template-columns: 1fr; }
+      [data-purpose="boarding-content"] { padding: 1rem 0.75rem; }
+      [data-purpose="boarding-pass"] { padding: 0.875rem; }
+      [data-purpose="keepsake-artifacts"],
+      [data-purpose="preference-metrics"] { grid-template-columns: 1fr; }
+      [data-purpose="keepsake-artifacts"] > div { padding: 0.75rem; }
+      [data-purpose="sidebar-nav"] .nav-item > div > span:last-child { font-size: 9px; }
+      main > header .material-symbols-outlined.text-brand-500 { display: none; }
+      main > header [data-i18n="flightRoute"] { max-width: 5.75rem; }
+    }
+    @media (pointer: coarse) {
+      button { min-height: 2.75rem; }
+      [data-purpose="language-switcher"] button { min-width: 2.75rem; }
+    }
+    .thin-border {
+      border-color: #e2e7ff;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #dae2fd;
+      border-radius: 4px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .window-oval {
+      border-radius: 42% 42% 38% 38% / 48% 48% 40% 40%;
+    }
+    .barcode-lines {
+      background: repeating-linear-gradient(
+        90deg,
+        #1e293b,
+        #1e293b 1.5px,
+        transparent 1.5px,
+        transparent 3.5px,
+        #1e293b 3.5px,
+        #1e293b 5px,
+        transparent 5px,
+        transparent 8px
+      );
+    }
+    .dashed-route {
+      stroke-dasharray: 4, 4;
+      animation: dash 20s linear infinite;
+    }
+    @keyframes dash {
+      to {
+        stroke-dashoffset: -100;
+      }
+    }
+    .vinyl-grooves {
+      background: radial-gradient(circle, #1a202c 25%, #2d3748 30%, #1a202c 35%, #2d3748 45%, #111827 60%, #1e293b 75%, #0f172a 100%);
+    }
+    /* Prevent Stitch's illustrative cards from ever being presented as live
+       data. integration.js reveals only API-rendered cards after generation. */
+    #view-02 [data-purpose="overview-primary"] > *:not(.api-day-card) { display: none; }
+    #activityStream > *:not(.api-activity-card) { display: none; }
+  </style>
+</head>
+<body class="h-screen flex overflow-hidden font-sans bg-nordic-bg">
+<svg class="inline-defs-container" aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden"></svg>
+<!-- BEGIN: Sidebar Navigation -->
+<aside class="w-64 bg-white border-r thin-border flex flex-col justify-between shrink-0 z-20" data-purpose="main-sidebar">
+<div>
+<!-- Brand Header: Strictly English Brand Logo -->
+<div class="px-5 pt-3.5 pb-3 border-b thin-border" data-purpose="sidebar-brand">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 rounded-xl overflow-hidden shadow-md shrink-0 border border-slate-200/60 bg-brand-700 flex items-center justify-center ring-1 ring-black/5">
+<img src="https://lh3.googleusercontent.com/aida/AEtjO1UhwHbQVmtDtQjsvgsm_DA8qYFFs1Y1DZ2ZsboOQvEK7T4cfQx2X805RYml3tSRognF6da1J0aQfFZGHxSvU86oPMfJDmlFPX_PSossqu0vEWtO2jzQri_kLn9c_dMKMy3Hl6-Z5AXXMOtGDX2HpGbdaoQhBwRs_03QZ_5zBl0Ard2sTndzN27NYWepn0ZzBEE3rmrDzqxPsIIkET8WbMvYZMz95fTFEtrQbhghUb5uk3PGqgDf67d9Ow" alt="TripTune Artistic Celestial Emblem" class="w-full h-full object-cover">
+</div>
+<div class="flex flex-col justify-center">
+<div class="text-base font-bold tracking-tight text-slate-900 leading-tight font-sans">TripTune</div>
+<div class="text-[9px] tracking-widest text-slate-400 uppercase font-mono mt-0.5">Your trip, tuned to you.</div>
+</div>
+</div>
+</div>
+<!-- Active Traveler Card -->
+<div class="p-4 mx-3 my-3 bg-slate-50/80 rounded-xl border thin-border" data-purpose="traveler-card">
+<div class="flex items-center justify-between">
+<button class="flex items-center gap-2.5 text-left rounded-lg" id="openProfileEditor" type="button" aria-label="编辑我的旅行偏好">
+<div class="w-7 h-7 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs font-bold" id="travelerAvatar">LM</div>
+<div>
+<div class="text-[10px] tracking-wider uppercase text-slate-400 font-medium" data-i18n="activeTraveler">当前旅人</div>
+<div class="text-xs font-semibold text-slate-800 mt-0.5" id="travelerNameDisplay">林默</div>
+</div>
+</button>
+<button aria-label="切换旅行者" class="p-1.5 rounded-lg hover:bg-slate-200/70 transition text-slate-600" data-purpose="toggle-traveler" id="toggleTravelerBtn" title="Switch Traveler">
+<span class="material-symbols-outlined text-[18px]">sync_alt</span>
+</button>
+</div>
+</div>
+<!-- Sidebar Navigation Links -->
+<nav class="px-3 space-y-1" data-purpose="sidebar-nav">
+<button class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50 transition" data-nav="00" onclick="switchView('00')">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[17px]">flight_takeoff</span>
+<span data-i18n="tab00" class="">登机入口</span>
+</div>
+<span class="text-[10px] font-mono text-slate-400">00</span>
+</button>
+<button class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-bold text-brand-700 bg-brand-50 border border-brand-200 shadow-sm" data-nav="01" onclick="switchView('01')">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[17px]">tune</span>
+<span data-i18n="navBrief" class="">出发简报</span>
+</div>
+<span class="text-[10px] font-mono text-slate-400">01</span>
+</button>
+<button class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50 transition" data-nav="02" onclick="switchView('02')">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[17px]">explore</span>
+<span data-i18n="navOverview" class="">旅程导览</span>
+</div>
+<span class="text-[10px] font-mono text-slate-400">02</span>
+</button>
+<button class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50 transition" data-nav="03" onclick="switchView('03')">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[17px]">map</span>
+<span data-i18n="navRoam" class="">今日漫游</span>
+</div>
+<span class="text-[10px] font-mono text-slate-400">03</span>
+</button>
+<button class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50 transition" data-nav="04" onclick="switchView('04')">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[17px]">alt_route</span>
+<span data-i18n="navReroute" class="">途中改线</span>
+</div>
+<span class="text-[10px] font-mono text-slate-400">04</span>
+</button>
+<button class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50 transition" data-nav="05" onclick="switchView('05')">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[17px]">bookmark_heart</span>
+<span data-i18n="navKeepsake" class="">旅程留存</span>
+</div>
+<span class="text-[10px] font-mono text-slate-400">05</span>
+</button>
+</nav>
+</div>
+<!-- Sidebar Telemetry Footer -->
+<div class="p-4 border-t thin-border text-[11px] text-slate-400 font-mono space-y-1.5 bg-slate-50/50">
+<div class="flex items-center justify-between uppercase tracking-wider text-slate-500 font-semibold mb-1">
+<span data-i18n="consoleMet" class="">旅程状态</span>
+<span class="flex h-2 w-2 relative">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+</span>
+</div>
+<div class="flex justify-between">
+<span data-i18n="waypoint" class="">当前目的地:</span>
+<span class="text-slate-600 font-medium" id="waypointValue">当前城市 · LIVE</span>
+</div>
+<div class="flex justify-between">
+<span data-i18n="syncFreq" class="">数据同步:</span>
+<span class="text-slate-600 font-medium">SQLite · LIVE</span>
+</div>
+</div>
+</aside>
+<!-- END: Sidebar Navigation -->
+<!-- BEGIN: Main Workstation Viewport -->
+<main class="flex-1 flex flex-col h-full overflow-hidden bg-nordic-bg">
+<!-- Top Instrument Bar -->
+<header class="h-14 bg-white border-b thin-border px-6 flex items-center justify-between shrink-0 z-10" data-purpose="top-instrument-bar">
+<!-- Flight Telemetry Stats -->
+<div class="flex items-center gap-6 text-xs font-mono text-slate-500 tracking-wide">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-brand-500">near_me</span>
+<span data-i18n="flightRoute" id="flightRouteLabel">目的地待生成</span>
+</div>
+<div class="hidden md:flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+<span data-i18n="flightSpeed" class="" id="tripStatusTop">行程状态：准备生成</span>
+</div>
+<div class="hidden lg:flex items-center gap-1.5">
+<span data-i18n="flightTime" class="" id="localTimeTop">本地时间：正在同步</span>
+</div>
+</div>
+<!-- Top Sub-Navigation Tabs & Pure Language Switcher -->
+<div class="flex items-center gap-2 shrink-0 flex-nowrap whitespace-nowrap"><button aria-label="切换旅行者" class="rounded-lg border thin-border bg-white text-brand-700" data-purpose="mobile-traveler-switch" onclick="toggleTraveler()" type="button"><span class="material-symbols-outlined text-[19px]">person_sync</span></button><div class="flex items-center bg-slate-100 p-0.5 rounded-full border thin-border text-xs shrink-0" data-purpose="language-switcher"><button class="px-2.5 py-0.5 rounded-full font-medium transition bg-white text-slate-900 shadow-sm shrink-0" data-purpose="language-option" id="langZhBtn" onclick="setLanguage('zh')">中</button><button class="px-2.5 py-0.5 rounded-full font-medium transition text-slate-500 hover:text-slate-900 shrink-0" data-purpose="language-option" id="langEnBtn" onclick="setLanguage('en')">EN</button></div></div>
+</header>
+<!-- Dynamic Content Workstation Body -->
+<div class="flex-1 overflow-y-auto custom-scroll p-6 md:p-8 relative" id="workspaceContainer">
+<!-- ========================================== -->
+<!-- VIEW 00: BOARDING ENTRANCE (Default View) -->
+<!-- ========================================== -->
+<!-- BEGIN: ViewBoarding -->
+<section class="max-w-4xl mx-auto flex flex-col items-center justify-center min-h-full py-4" id="view-00">
+<!-- Window & Realistic Physical Boarding Pass Shell -->
+<div class="w-full max-w-2xl bg-white border thin-border rounded-2xl shadow-xl overflow-hidden">
+<!-- Flight Status Banner -->
+<div class="bg-gradient-to-r from-brand-700 via-brand-600 to-slate-800 text-white px-6 py-3.5 flex items-center justify-between text-xs tracking-wider font-mono" data-purpose="boarding-status">
+<div class="flex items-center gap-2.5">
+<span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+<span data-i18n="flightStatus" id="flightStatusLabel">填写偏好后生成旅程</span>
+</div>
+<div class="hidden sm:block text-slate-200 text-[11px]" data-i18n="flightAlt" id="boardingStatusLabel">等待旅程信息</div>
+</div>
+<div class="p-8 flex flex-col items-center" data-purpose="boarding-content">
+<!-- Cabin Oval Window Graphic with Realistic Sky/Cloud View -->
+<div class="relative mb-6 flex flex-col items-center select-none"><div id="planeWindowOuter" class="relative w-56 h-72 sm:w-64 sm:h-80 rounded-[48px] p-3.5 bg-gradient-to-b from-slate-200 via-slate-100 to-slate-300 shadow-2xl border-4 border-slate-300/80 ring-1 ring-black/5 flex items-center justify-center"><div class="relative w-full h-full rounded-[38px] p-2 bg-gradient-to-b from-slate-300 via-slate-200 to-slate-100 shadow-inner border border-slate-400/40 flex items-center justify-center overflow-hidden"><div id="windowViewport" class="relative w-full h-full rounded-[30px] overflow-hidden transition-all duration-700 bg-gradient-to-b from-sky-300 via-sky-100 to-amber-100 shadow-inner"><div id="skyDayBg" class="absolute inset-0 transition-opacity duration-700 opacity-100 bg-gradient-to-b from-sky-400 via-sky-200 to-amber-100"><div class="absolute -bottom-8 -left-6 w-44 h-32 bg-white/70 rounded-full blur-md"></div><div class="absolute -bottom-10 -right-8 w-48 h-36 bg-white/60 rounded-full blur-md"></div><div class="absolute bottom-8 left-1/2 -translate-x-1/2 w-28 h-16 opacity-20 bg-slate-800 rounded-t-full blur-sm"></div></div><div id="skyNightBg" class="absolute inset-0 transition-opacity duration-700 opacity-0 bg-gradient-to-b from-slate-950 via-[#0a1628] to-[#122844]"><div class="absolute top-6 left-8 w-1 h-1 bg-white rounded-full opacity-80"></div><div class="absolute top-12 right-10 w-1.5 h-1.5 bg-amber-100 rounded-full opacity-90 animate-pulse"></div><div class="absolute top-20 left-16 w-1 h-1 bg-white rounded-full opacity-60"></div><div class="absolute bottom-16 right-14 w-1 h-1 bg-white rounded-full opacity-70"></div><div class="absolute -bottom-8 -left-6 w-44 h-28 bg-indigo-900/40 rounded-full blur-md"></div></div><div id="windowShade" class="absolute top-0 left-0 right-0 h-0 bg-gradient-to-b from-slate-200 via-slate-100 to-slate-300 border-b-4 border-slate-400/80 shadow-2xl transition-all duration-500 overflow-hidden z-20 flex flex-col justify-end"><div class="w-full py-1 bg-slate-300/60 border-t border-slate-200 flex justify-center items-center"><div class="w-12 h-2 rounded-full bg-slate-400 shadow-inner cursor-pointer hover:bg-slate-500 transition"></div></div></div><div id="windowGlassOverlay" class="absolute inset-0 z-10 flex flex-col justify-between p-4 text-slate-800 transition-colors duration-700 pointer-events-none"><div class="flex items-center justify-between text-[9px] font-mono tracking-wider pt-2 opacity-80"><div class="flex flex-col"><span class="text-[8px] opacity-70">FROM</span>
+<span class="text-sm font-bold tracking-tight font-sans" id="windowOriginCode">HOME</span>
+</div><div class="flex flex-col items-center"><span class="material-symbols-outlined text-[18px] transform rotate-90">flight</span></div><div class="flex flex-col items-end"><span class="text-[8px] opacity-70">TO</span><span class="text-sm font-bold tracking-tight font-sans" id="boardingDestinationCode">城市</span></div></div><div class="w-full h-[1px] bg-current opacity-25 my-auto"></div><div class="grid grid-cols-2 gap-2 text-[9px] font-mono opacity-85"><div class="space-y-1"><div><span class="block text-[7px] opacity-70">SEAT</span>
+<span class="text-xs font-bold font-sans" id="windowSeat">—</span>
+</div><div><span class="block text-[7px] opacity-70">FLIGHT</span>
+<span class="text-xs font-bold" id="windowFlight">等待生成</span>
+</div></div><div class="space-y-1 text-right"><div><span class="block text-[7px] opacity-70">GATE</span>
+<span class="text-xs font-bold font-sans" id="windowDate">今天</span>
+</div><div><span class="block text-[7px] opacity-70">CABIN</span>
+<span class="text-xs font-bold" id="windowTripStatus">等待生成</span>
+</div></div></div><div class="pt-2 border-t border-current border-opacity-20 flex flex-col items-center"><div class="w-28 h-5 barcode-lines opacity-75 rounded-sm"></div><span class="text-[8px] font-mono opacity-60 mt-1 tracking-widest">TRIPTUNE · SKY PASS</span></div></div></div></div></div>
+</div>
+<!-- Product introduction -->
+<div class="text-center mb-6"><div class="text-[11px] tracking-[0.25em] text-brand-600 uppercase font-semibold font-mono">PERSONAL VOYAGE</div><div class="text-xs text-brand-500 font-medium mt-0.5">为你而来的旅行计划</div><h1 class="text-2xl font-bold text-slate-900 mt-2 tracking-tight">为你量身定制的一段旅程</h1><p class="text-xs text-slate-500 mt-2 max-w-md mx-auto leading-relaxed">从你的兴趣、节奏与预算出发，<br>安排每一步，也为沿途的变化留出余地。</p></div>
+<!-- Tactile Physical Boarding Pass Card -->
+<div class="w-full bg-slate-50 border thin-border rounded-xl p-6 relative shadow-inner overflow-hidden" data-purpose="boarding-pass">
+<!-- Cutout notches on sides for realistic physical ticket feel -->
+<div class="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white border border-slate-200"></div>
+<div class="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white border border-slate-200"></div>
+<div class="flex items-center justify-between pb-4 border-b thin-border" data-purpose="boarding-pass-header">
+<div class="flex items-center gap-2">
+<div class="w-2.5 h-2.5 rounded-full bg-brand-600"></div>
+<span class="text-xs font-bold tracking-wider text-slate-800 uppercase" data-i18n="boardingPassBrand">TRIPTUNE AIR · PERSONAL VOYAGE</span>
+</div>
+<span class="px-2.5 py-0.5 text-[10px] font-mono uppercase bg-brand-100 text-brand-700 font-semibold rounded-full" data-i18n="boardingClass">头等舱</span>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-4 my-5">
+<div>
+<div class="text-[10px] text-slate-400 uppercase font-mono" data-i18n="passPassenger">旅客姓名</div>
+<div class="text-sm font-bold text-slate-900 mt-0.5 traveler-dynamic-name">林默</div>
+</div>
+<div>
+<div class="text-[10px] text-slate-400 uppercase font-mono" data-i18n="passFlight">航班代号</div>
+<div class="text-sm font-bold text-slate-900 mt-0.5 font-mono" id="boardingFlightCode">等待生成</div>
+</div>
+<div>
+<div class="text-[10px] text-slate-400 uppercase font-mono" data-i18n="passDate">签发日期</div>
+<div class="text-sm font-bold text-slate-900 mt-0.5 font-mono" id="boardingIssuedDate">生成后显示</div>
+</div>
+<div>
+<div class="text-[10px] text-slate-400 uppercase font-mono" data-i18n="passSeat">座位 / 登机门</div>
+<div class="text-sm font-bold text-slate-900 mt-0.5 font-mono" id="boardingSeatGate">—</div>
+</div>
+</div>
+<!-- Signal Tuning Line + Barcode Graphic -->
+<div class="pt-4 border-t thin-border flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-500 font-mono">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[15px] text-brand-500">graphic_eq</span>
+<span id="tuningSummaryText" class="">旅行偏好: 当代建筑 / 独立书店 / 爵士音乐</span>
+</div>
+<!-- Realistic SVG / CSS Barcode -->
+<div class="flex items-center gap-2">
+<div class="w-32 h-7 barcode-lines rounded-sm opacity-85"></div>
+<span class="text-[9px] text-slate-400 font-mono">#9284-01</span>
+</div>
+</div>
+</div>
+<!-- Interactive Action Button -->
+<div class="w-full mt-6 space-y-3">
+<button class="w-full py-3.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-sm font-semibold transition shadow-md hover:shadow-lg flex items-center justify-center gap-2 group" data-purpose="swipe-boarding-btn" onclick="enterBoarding()">
+<span class="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+<span data-i18n="enterBriefBtn" class="">轻触进入旅程需求简报</span>
+</button>
+<div class="text-center">
+<button class="text-xs text-slate-400 hover:text-slate-600 underline font-medium" data-i18n="skipSwipe" onclick="enterBoarding()">已有想法？直接填写旅行偏好</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- END: ViewBoarding -->
+<!-- ========================================== -->
+<!-- VIEW 01: DEPARTURE BRIEF -->
+<!-- ========================================== -->
+<!-- BEGIN: ViewBrief -->
+<section class="hidden max-w-5xl mx-auto space-y-6" id="view-01">
+<div class="flex items-center justify-between pb-4 border-b thin-border">
+<div>
+<h2 class="text-xl font-bold text-slate-900" data-i18n="briefHeader">出发需求简报</h2>
+<p class="text-xs text-slate-500 mt-0.5" data-i18n="briefSub">告诉我们你的兴趣、节奏与预算，生成真正适合你的旅程</p>
+</div>
+<span class="text-xs font-mono text-brand-600 bg-brand-50 px-2.5 py-1 rounded-md border border-brand-100">STAGE 01 / BRIEF</span>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6" data-purpose="brief-layout">
+<!-- Left 2 Cols: Form Options -->
+<div class="lg:col-span-2 space-y-5" data-purpose="brief-primary">
+<!-- Basic Parameters -->
+<div class="bg-white p-5 rounded-xl border thin-border shadow-sm space-y-4">
+<div class="flex items-center justify-between">
+<h3 class="text-sm font-semibold text-slate-800" data-i18n="briefBasic">基本参数</h3>
+<span class="material-symbols-outlined text-[18px] text-slate-400">sliders</span>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-4" data-purpose="trip-basics-grid">
+<div>
+<label class="text-xs text-slate-500 block mb-1" data-i18n="briefDest" for="destination">目的地</label>
+<div class="relative">
+<input aria-describedby="destinationHint destinationError" autocomplete="off" class="w-full text-base sm:text-xs font-medium bg-slate-50 border thin-border rounded-lg p-2 text-slate-800 focus:ring-1 focus:ring-brand-500" list="supportedDestinations" maxlength="32" placeholder="输入城市，如北京" required="" type="text" value="">
+<datalist id="supportedDestinations"></datalist>
+</div>
+<p class="mt-1 text-[10px] text-slate-400" id="destinationHint">支持已配置城市的中文名、英文名或机场三字码</p>
+<p aria-live="polite" class="mt-1 hidden text-[11px] text-red-700" id="destinationError"></p>
+</div>
+<div>
+<label class="text-xs text-slate-500 block mb-1" data-i18n="briefDays" for="duration">出行天数</label>
+<select class="w-full text-xs font-medium bg-slate-50 border thin-border rounded-lg p-2 text-slate-800 focus:ring-1 focus:ring-brand-500" id="duration">
+<option value="1">1 天</option>
+<option value="2">2 天</option>
+<option value="3">3 天</option>
+<option value="4">4 天</option>
+<option value="5">5 天</option>
+<option value="6">6 天</option>
+<option value="7">7 天</option>
+</select>
+</div>
+<div>
+<label class="text-xs text-slate-500 block mb-1" data-i18n="briefBudget" for="briefBudgetSelect">预算范围</label>
+<input class="w-full text-base sm:text-xs font-medium bg-slate-50 border thin-border rounded-lg p-2 text-slate-800 focus:ring-1 focus:ring-brand-500" id="briefBudgetSelect" max="100000" min="500" step="100" type="number" value="5000">
+</div>
+<div>
+<label class="text-xs text-slate-500 block mb-1" data-i18n="briefParty" for="partySize">同行人数</label>
+<select class="w-full text-xs font-medium bg-slate-50 border thin-border rounded-lg p-2 text-slate-800 focus:ring-1 focus:ring-brand-500" id="partySize">
+<option value="1">1人独自探索</option>
+<option value="2">2人同行</option>
+<option value="3">3人同行</option>
+<option value="4">4人同行</option>
+<option value="5">5人同行</option>
+<option value="6">6人同行</option>
+<option value="7">7人同行</option>
+<option value="8">8人同行</option>
+</select>
+</div>
+</div>
+</div>
+<!-- Tone & Interests -->
+<div class="bg-white p-5 rounded-xl border thin-border shadow-sm space-y-4">
+<div class="flex items-center justify-between">
+<h3 class="text-sm font-semibold text-slate-800" data-i18n="briefInterests">核心旅行兴趣</h3>
+<span class="text-[11px] font-mono text-brand-600 font-medium" id="briefTagCount">5 TAGS ACTIVE</span>
+</div>
+<div class="flex flex-wrap gap-2" id="interestTagsContainer"></div>
+<div class="flex flex-col sm:flex-row gap-2 pt-1">
+<label class="sr-only" for="customInterestInput">自定义旅行兴趣</label>
+<input class="min-w-0 flex-1 text-base sm:text-xs bg-slate-50 border thin-border rounded-lg px-3 py-2 text-slate-800 focus:ring-1 focus:ring-brand-500" id="customInterestInput" maxlength="24" placeholder="还想体验什么？例如：逛早市" type="text">
+<button class="px-4 py-2 rounded-lg border border-brand-200 text-brand-700 bg-brand-50 hover:bg-brand-100 text-xs font-semibold" id="addCustomInterest" type="button">添加兴趣</button>
+</div>
+</div>
+<!-- Rhythm & Exclusions -->
+<div class="bg-white p-5 rounded-xl border thin-border shadow-sm space-y-4">
+<h3 class="text-sm font-semibold text-slate-800" data-i18n="briefPace">漫游步调</h3>
+<div class="grid grid-cols-3 gap-3" data-purpose="pace-grid">
+<label class="border-2 rounded-xl p-3 text-center cursor-pointer border-brand-600 bg-brand-50/60 shadow-sm transition">
+<input checked="" class="sr-only" name="pace" type="radio">
+<div class="text-xs font-bold text-brand-700" data-i18n="paceChill">松弛漫步</div>
+<div class="text-[10px] text-slate-500 mt-1" data-i18n="paceChillSub">一天安排两处，慢慢走、慢慢看</div>
+</label>
+<label class="border rounded-xl p-3 text-center cursor-pointer border-slate-200 bg-white hover:border-slate-300 transition">
+<input class="sr-only" name="pace" type="radio">
+<div class="text-xs font-semibold text-slate-800" data-i18n="paceBalance">平衡探索</div>
+<div class="text-[10px] text-slate-500 mt-1" data-i18n="paceBalanceSub">一天安排三处，逛玩和休息都顾到</div>
+</label>
+<label class="border rounded-xl p-3 text-center cursor-pointer border-slate-200 bg-white hover:border-slate-300 transition">
+<input class="sr-only" name="pace" type="radio">
+<div class="text-xs font-semibold text-slate-800" data-i18n="paceDense">充实饱满</div>
+<div class="text-[10px] text-slate-500 mt-1" data-i18n="paceDenseSub">一天安排四处，想多看一些也不绕路</div>
+</label>
+</div>
+</div>
+</div>
+<!-- Right Col: Calibration Summary & Radar Spider Matrix -->
+<div class="space-y-4">
+<div class="bg-white p-5 rounded-xl border thin-border shadow-sm space-y-4">
+<div class="flex items-center justify-between">
+<h3 class="text-sm font-semibold text-slate-800" data-i18n="briefCalibTitle">偏好匹配概览</h3>
+<span class="text-[10px] font-mono bg-emerald-50 text-emerald-700 font-semibold px-2 py-0.5 rounded" id="preferenceMatchLabel">等待选择兴趣</span>
+</div>
+<!-- Graphical Radar / Spider Vector Visualization -->
+<div class="p-3 bg-slate-50/80 rounded-xl border thin-border flex flex-col items-center">
+<div class="relative w-44 h-44">
+<svg class="w-full h-full" viewBox="0 0 160 160">
+<!-- Radar Polygons (Background Grid) -->
+<polygon fill="none" points="80,15 142,52 142,128 80,165 18,128 18,52" stroke="#e2e7ff" stroke-width="1"></polygon>
+<polygon fill="none" points="80,35 124,61 124,113 80,139 36,113 36,61" stroke="#e2e7ff" stroke-width="1"></polygon>
+<polygon fill="none" points="80,55 106,70 106,98 80,113 54,98 54,70" stroke="#e2e7ff" stroke-width="1"></polygon>
+<!-- Axes -->
+<line stroke="#e2e7ff" stroke-width="1" x1="80" x2="80" y1="80" y2="15"></line>
+<line stroke="#e2e7ff" stroke-width="1" x1="80" x2="142" y1="80" y2="52"></line>
+<line stroke="#e2e7ff" stroke-width="1" x1="80" x2="142" y1="80" y2="128"></line>
+<line stroke="#e2e7ff" stroke-width="1" x1="80" x2="80" y1="80" y2="165"></line>
+<line stroke="#e2e7ff" stroke-width="1" x1="80" x2="18" y1="80" y2="128"></line>
+<line stroke="#e2e7ff" stroke-width="1" x1="80" x2="18" y1="80" y2="52"></line>
+<!-- Tuned Data Polygon -->
+<polygon fill="rgba(15, 61, 76, 0.18)" points="80,24 135,58 128,122 80,145 32,118 28,58" stroke="#0f3d4c" stroke-width="2"></polygon>
+<!-- Data Points -->
+<circle cx="80" cy="24" fill="#0f3d4c" r="3"></circle>
+<circle cx="135" cy="58" fill="#0f3d4c" r="3"></circle>
+<circle cx="128" cy="122" fill="#0f3d4c" r="3"></circle>
+<circle cx="80" cy="145" fill="#0f3d4c" r="3"></circle>
+<circle cx="32" cy="118" fill="#0f3d4c" r="3"></circle>
+<circle cx="28" cy="58" fill="#0f3d4c" r="3"></circle>
+</svg>
+</div>
+<div class="w-full flex justify-between text-[10px] font-mono text-slate-400 mt-1">
+<span id="radarSummaryA">等待选择</span>
+<span id="radarSummaryB">偏好会实时变化</span>
+</div>
+</div>
+<!-- Calibration Bars -->
+<div class="space-y-3 text-xs">
+<div>
+<div class="flex justify-between text-slate-600 mb-1">
+<span id="calibLabel1">建筑与设计</span>
+<span class="font-mono font-semibold text-brand-700" id="calibValue1">34%</span>
+</div>
+<div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+<div class="bg-brand-600 h-full" id="calibBar1" style="width:34%"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-slate-600 mb-1">
+<span id="calibLabel2">人文阅读</span>
+<span class="font-mono font-semibold text-brand-700" id="calibValue2">34%</span>
+</div>
+<div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+<div class="bg-brand-600 h-full" id="calibBar2" style="width:34%"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-slate-600 mb-1">
+<span id="calibLabel3">在地味道</span>
+<span class="font-mono font-semibold text-brand-700" id="calibValue3">34%</span>
+</div>
+<div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+<div class="bg-brand-600 h-full" id="calibBar3" style="width:34%"></div>
+</div>
+</div>
+</div>
+<div class="p-3 bg-brand-50/50 border border-brand-100 rounded-lg text-xs text-slate-600 leading-relaxed" data-i18n="calibNote" id="calibNote">选择目的地与兴趣后，这里会显示本次生成依据。</div>
+<button class="w-full py-3 bg-brand-700 hover:bg-brand-800 text-white rounded-lg text-xs font-semibold tracking-wide transition shadow-sm flex items-center justify-center gap-2" data-i18n="btnGeneratePlan" onclick="generateItinerary()">生成我的专属旅程</button>
+</div>
+</div>
+</div>
+</section>
+<!-- END: ViewBrief -->
+<!-- ========================================== -->
+<!-- VIEW 02: VOYAGE OVERVIEW -->
+<!-- ========================================== -->
+<!-- BEGIN: ViewOverview -->
+<section class="hidden max-w-5xl mx-auto space-y-6" id="view-02">
+<div class="flex items-center justify-between pb-4 border-b thin-border">
+<div>
+<h2 class="text-xl font-bold text-slate-900" data-i18n="overviewHeader">旅程全景导览</h2>
+<p class="text-xs text-slate-500 mt-0.5" data-i18n="overviewSub">根据本次天数生成安排与城市移动关系</p>
+</div>
+<button class="text-xs px-3.5 py-1.5 bg-brand-50 text-brand-700 border border-brand-200 rounded-lg font-semibold hover:bg-brand-100 transition flex items-center gap-1" data-i18n="btnViewToday" id="overviewTodayButton" onclick="switchView('03')">查看今日漫游 →</button>
+</div>
+<!-- 4 Graphic Metric Cards -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4" data-purpose="overview-metrics">
+<div class="bg-white p-4 rounded-xl border thin-border shadow-sm flex items-start gap-3">
+<div class="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[20px]">directions_walk</span>
+</div>
+<div>
+<div class="text-[11px] text-slate-400 font-medium" data-i18n="metricTransit">交通接驳</div>
+<div class="text-sm font-bold text-slate-900 mt-0.5" data-i18n="metricTransitVal" id="metricTransitValue">地铁 / 公交 / 步行</div>
+<div class="text-[10px] text-brand-600 font-mono mt-0.5" data-i18n="metricTransitSub" id="metricTransitSubValue">按当天区域组合</div>
+</div>
+</div>
+<div class="bg-white p-4 rounded-xl border thin-border shadow-sm flex items-start gap-3">
+<div class="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[20px]">hotel</span>
+</div>
+<div>
+<div class="text-[11px] text-slate-400 font-medium" data-i18n="metricStay">精选居所</div>
+<div class="text-sm font-bold text-slate-900 mt-0.5" data-i18n="metricStayVal" id="metricStayValue">中心城区连住</div>
+<div class="text-[10px] text-slate-500 font-mono mt-0.5" data-i18n="metricStaySub" id="metricStaySubValue">减少住宿迁移</div>
+</div>
+</div>
+<div class="bg-white p-4 rounded-xl border thin-border shadow-sm flex items-start gap-3">
+<div class="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[20px]">account_balance_wallet</span>
+</div>
+<div>
+<div class="text-[11px] text-slate-400 font-medium" data-i18n="metricBudget">预算消耗进度</div>
+<div class="text-sm font-bold text-slate-900 mt-0.5 font-mono" id="metricBudgetValue">¥3,480 / ¥5,000</div>
+<div class="text-[10px] text-emerald-600 font-mono mt-0.5 font-semibold" data-i18n="metricBudgetSub" id="metricBudgetSubValue">按本次预算计算</div>
+</div>
+</div>
+<div class="bg-white p-4 rounded-xl border thin-border shadow-sm flex items-start gap-3">
+<div class="w-9 h-9 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[20px]">radar</span>
+</div>
+<div>
+<div class="text-[11px] text-slate-400 font-medium" data-i18n="metricRadius">探索半径</div>
+<div class="text-sm font-bold text-slate-900 mt-0.5 font-mono" id="metricRadiusValue">多街区组合</div>
+<div class="text-[10px] text-slate-500 font-mono mt-0.5" data-i18n="metricRadiusSub" id="metricRadiusSubValue">按兴趣与节奏计算</div>
+</div>
+</div>
+</div>
+<!-- 3 Days Rich Cards Stream & Spatial Map Section -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6" data-purpose="overview-layout">
+<div class="lg:col-span-2 space-y-4" data-purpose="overview-primary">
+<!-- Day cards are rendered only from the generated itinerary returned by the API. -->
+<div class="rounded-xl border thin-border bg-white p-6 text-sm text-slate-500" data-purpose="overview-empty-state">
+  输入目的地、天数与兴趣后，生成旅程导览。
+</div>
+</div>
+<!-- Right Side: Spatial Reason Panel & Mini Route Thumbnail -->
+<div class="space-y-4">
+<div class="bg-white p-5 rounded-xl border thin-border shadow-sm space-y-4">
+<h3 class="text-sm font-semibold text-slate-800" data-i18n="whyFitsTitle">为什么适合你</h3>
+<div class="space-y-3 text-xs text-slate-600 leading-relaxed">
+<div class="p-3.5 bg-slate-50/80 rounded-xl border thin-border">
+<div class="flex items-center gap-2 text-brand-700 font-bold mb-1">
+<span class="material-symbols-outlined text-[17px]">graphic_eq</span>
+<span data-i18n="whyPoint1Title" class="" id="whyPoint1Title">按兴趣选择主线</span>
+</div>
+<span class="text-slate-600" data-i18n="whyPoint1Body" id="whyPoint1Body">生成后显示本次路线为什么适合你。</span>
+</div>
+<div class="p-3.5 bg-slate-50/80 rounded-xl border thin-border">
+<div class="flex items-center gap-2 text-brand-700 font-bold mb-1">
+<span class="material-symbols-outlined text-[17px]">directions_walk</span>
+<span data-i18n="whyPoint2Title" class="" id="whyPoint2Title">按你的节奏控制移动</span>
+</div>
+<span class="text-slate-600" data-i18n="whyPoint2Body" id="whyPoint2Body">生成后显示移动安排与避让策略。</span>
+</div>
+</div>
+<!-- Golden Hour Match Badge -->
+<div class="p-3 bg-gradient-to-r from-amber-500/10 to-brand-500/10 rounded-xl border border-amber-200/60 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-amber-600 text-[20px]">wb_twilight</span>
+<div>
+<div class="text-[11px] font-bold text-slate-800">当日光线与开放时间</div>
+<div class="text-[10px] text-slate-500" id="goldenHourOverview">按当日地点开放与光线安排</div>
+</div>
+</div>
+<span class="text-xs font-mono font-bold text-amber-700" id="goldenHourScore">动态匹配</span>
+</div>
+<button class="w-full py-2.5 bg-brand-700 hover:bg-brand-800 text-white rounded-lg text-xs font-medium transition shadow-sm" data-i18n="btnEnterDay2" onclick="switchView('03')">进入今日漫游详情</button>
+</div>
+</div>
+</div>
+</section>
+<!-- END: ViewOverview -->
+<!-- ========================================== -->
+<!-- VIEW 03: TODAY'S ROAM (MAP + PHOTO CARDS) -->
+<!-- ========================================== -->
+<!-- BEGIN: ViewRoam -->
+<section class="hidden max-w-5xl mx-auto space-y-6" id="view-03">
+<!-- Roam Header -->
+<div class="flex items-center justify-between pb-4 border-b thin-border">
+<div>
+<div class="flex items-center gap-2">
+<span class="text-xs font-mono font-bold text-brand-700 bg-brand-100 px-2 py-0.5 rounded" id="roamDayBadge">DAY 02</span>
+<h2 class="text-xl font-bold text-slate-900" data-i18n="roamHeader">今日漫游路线</h2>
+</div>
+<p class="text-xs text-slate-500 mt-0.5" data-i18n="roamSub">按时间顺序查看今天去哪儿；你的反馈会影响下一次推荐</p>
+</div>
+<button class="text-xs px-3.5 py-2 bg-amber-50 text-amber-800 border border-amber-200 rounded-lg font-semibold hover:bg-amber-100 transition flex items-center gap-1.5 shadow-sm" data-purpose="trigger-reroute-btn" onclick="switchView('04')">
+<span class="material-symbols-outlined text-[16px] text-amber-600">warning</span>
+<span data-i18n="btnChangeRoute" class="">途中发生变化 (改线)</span>
+</button>
+</div>
+<!-- Graphical interactive route map; labels are populated from the current itinerary -->
+<div class="bg-white rounded-xl border thin-border shadow-sm overflow-hidden">
+<div class="p-3 border-b thin-border bg-slate-50/80 flex items-center justify-between text-xs font-mono" data-purpose="route-map-toolbar">
+<div class="flex items-center gap-2 text-slate-700 font-medium">
+<span class="material-symbols-outlined text-[16px] text-brand-600">map</span>
+<span id="routeMapTitle">目的地待生成 · 当日区域路线示意</span>
+</div>
+<div class="flex items-center gap-3 text-[11px] text-slate-500" data-purpose="route-map-legend">
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-brand-600"></span> 今日停靠</span>
+<span class="flex items-center gap-1"><span class="w-2.5 h-0.5 bg-amber-500 inline-block"></span> 黄金光影段</span>
+</div>
+</div>
+<div class="relative h-60 w-full bg-[#f6f8fb] overflow-hidden" data-purpose="route-map-viewport">
+<!-- Vector Map SVG -->
+<svg class="w-full h-full" preserveAspectRatio="none" viewBox="0 0 900 240">
+<!-- Grid Background Lines -->
+<defs>
+<pattern height="40" id="mapGrid" patternUnits="userSpaceOnUse" width="40">
+<path d="M 40 0 L 0 0 0 40" fill="none" stroke="#e9edf5" stroke-width="1"></path>
+</pattern>
+</defs>
+<rect fill="url(#mapGrid)" height="100%" width="100%"></rect>
+<!-- Curving River / Huangpu River Graphic -->
+<path d="M 680 0 Q 720 120 780 240" fill="none" opacity="0.6" stroke="#d5e3ee" stroke-width="48"></path>
+<path d="M 680 0 Q 720 120 780 240" fill="none" opacity="0.8" stroke="#b9d6e8" stroke-width="32"></path>
+<text fill="#6d8fa8" font-family="JetBrains Mono" font-size="10" id="routeWaterLabel" letter-spacing="3" transform="rotate(70, 735, 130)" x="735" y="130">城市水系</text>
+<!-- Walking Paths Connecting Waypoints -->
+<!-- Leg 1 to 2 -->
+<path class="dashed-route" d="M 160 110 C 230 80, 270 140, 360 120" fill="none" stroke="#0f3d4c" stroke-linecap="round" stroke-width="2.5"></path>
+<!-- Leg 2 to 3 -->
+<path d="M 360 120 C 440 100, 500 160, 580 90" fill="none" stroke="#ff7b44" stroke-linecap="round" stroke-width="3"></path>
+<!-- Leg 3 to 4 -->
+<path class="dashed-route" d="M 580 90 C 630 60, 680 90, 740 70" fill="none" stroke="#0f3d4c" stroke-linecap="round" stroke-width="2.5"></path>
+<!-- City Blocks & Parks representation -->
+<rect fill="#e8f3ee" height="45" rx="6" stroke="#cde5d7" stroke-width="1" width="80" x="220" y="40"></rect>
+<text fill="#4d7c62" font-family="Inter" font-size="9" id="routeAreaLabel1" x="235" y="65">区域一</text>
+<rect fill="#f4f0ec" height="50" rx="6" stroke="#e5ded6" stroke-width="1" width="90" x="440" y="130"></rect>
+<text fill="#8c7863" font-family="Inter" font-size="9" id="routeAreaLabel2" x="455" y="160">区域二</text>
+<!-- Waypoint Pin 1 -->
+<g transform="translate(160, 110)">
+<circle fill="#0f3d4c" opacity="0.15" r="14"></circle>
+<circle fill="#0f3d4c" r="9"></circle>
+<text fill="#fff" font-family="JetBrains Mono" font-size="9" font-weight="bold" text-anchor="middle" y="3.5">1</text>
+<rect fill="#ffffff" height="18" rx="4" stroke="#e2e7ff" stroke-width="1" width="80" x="-40" y="14"></rect>
+<text fill="#1e293b" font-family="Inter" font-size="9" font-weight="600" id="routeNode1" text-anchor="middle" y="26">第一站</text>
+</g>
+<!-- Waypoint Pin 2 -->
+<g transform="translate(360, 120)">
+<circle fill="#0f3d4c" opacity="0.15" r="14"></circle>
+<circle fill="#0f3d4c" r="9"></circle>
+<text fill="#fff" font-family="JetBrains Mono" font-size="9" font-weight="bold" text-anchor="middle" y="3.5">2</text>
+<rect fill="#ffffff" height="18" rx="4" stroke="#e2e7ff" stroke-width="1" width="80" x="-40" y="14"></rect>
+<text fill="#1e293b" font-family="Inter" font-size="9" font-weight="600" id="routeNode2" text-anchor="middle" y="26">第二站</text>
+</g>
+<!-- Waypoint Pin 3 (Golden Hour Focus) -->
+<g transform="translate(580, 90)">
+<circle class="animate-pulse" fill="#ff7b44" opacity="0.2" r="16"></circle>
+<circle fill="#ff7b44" r="10"></circle>
+<text fill="#fff" font-family="JetBrains Mono" font-size="9" font-weight="bold" text-anchor="middle" y="3.5">3</text>
+<rect fill="#ffffff" height="20" rx="4" stroke="#ffd8c7" stroke-width="1" width="90" x="-45" y="14"></rect>
+<text fill="#ff7b44" font-family="Inter" font-size="9" font-weight="700" id="routeNode3" text-anchor="middle" y="27">第三站</text>
+</g>
+<!-- Waypoint Pin 4 -->
+<g transform="translate(740, 70)">
+<circle fill="#0f3d4c" opacity="0.15" r="14"></circle>
+<circle fill="#0f3d4c" r="9"></circle>
+<text fill="#fff" font-family="JetBrains Mono" font-size="9" font-weight="bold" text-anchor="middle" y="3.5">4</text>
+<rect fill="#ffffff" height="18" rx="4" stroke="#e2e7ff" stroke-width="1" width="80" x="-40" y="14"></rect>
+<text fill="#1e293b" font-family="Inter" font-size="9" font-weight="600" id="routeNode4" text-anchor="middle" y="26">第四站</text>
+</g>
+</svg>
+<!-- Golden hour badge overlay on map -->
+<div class="absolute bottom-3 left-3 bg-white/95 backdrop-blur-sm border thin-border px-3 py-1.5 rounded-lg shadow-sm flex items-center gap-2 text-[11px]" data-purpose="golden-hour-badge">
+<span class="material-symbols-outlined text-amber-500 text-[16px]">wb_sunny</span>
+<span class="text-slate-700 font-medium" id="goldenHourMap">黄金光影时段将随城市与路线更新</span>
+</div>
+</div>
+</div>
+<div data-purpose="mobile-route-summary">
+<div data-purpose="mobile-route-stop"><span data-purpose="mobile-route-number">—</span><div><strong class="text-sm text-slate-900">等待本次旅程生成</strong><div class="text-xs text-slate-500 mt-1">输入目的地后显示路线</div></div></div>
+</div>
+<!-- Activity Cards Stream (created from the current itinerary) -->
+<div class="space-y-4" id="activityStream">
+<div class="rounded-xl border thin-border bg-white p-6 text-sm text-slate-500" data-purpose="activity-empty-state">
+  生成旅程后，这里会显示根据当前城市和偏好安排的每一站。
+</div>
+</div>
+</section>
+<!-- END: ViewRoam -->
+<!-- ========================================== -->
+<!-- VIEW 04: REROUTE (DYNAMIC ADJUSTMENT) -->
+<!-- ========================================== -->
+<!-- BEGIN: ViewReroute -->
+<section class="hidden max-w-5xl mx-auto space-y-6" id="view-04">
+<div class="flex items-center justify-between pb-4 border-b thin-border">
+<div>
+<h2 class="text-xl font-bold text-slate-900" data-i18n="rerouteHeader">途中动态改线</h2>
+<p class="text-xs text-slate-500 mt-0.5" data-i18n="rerouteSub">应对天气突变或临时体能状况，一键平滑置换接续行程</p>
+</div>
+<span class="text-xs font-mono text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200 font-semibold">LIVE REROUTE</span>
+</div>
+<!-- Contingency Trigger Buttons with visual icons -->
+<div class="space-y-2">
+<label class="text-xs font-semibold text-slate-700 block" data-i18n="selectCondition">请选择现场突发情况：</label>
+<div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900" id="rerouteEmptyState">
+  先生成一份旅程，途中有变化时再从这里调整。
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+<button class="incident-btn border-2 rounded-xl p-3.5 text-left bg-brand-50/70 border-brand-600 text-brand-900 transition shadow-sm" onclick="selectIncident('rain')">
+<div class="flex items-center justify-between mb-1">
+<span class="material-symbols-outlined text-brand-600 text-[22px]">rainy</span>
+<span class="w-2 h-2 rounded-full bg-brand-600"></span>
+</div>
+<div class="text-xs font-bold" data-i18n="incRain">突发降雨</div>
+<div class="text-[10px] text-slate-500 mt-0.5" data-i18n="incRainSub">转入全室内路线</div>
+</button>
+<button class="incident-btn border rounded-xl p-3.5 text-left bg-white border-slate-200 hover:bg-slate-50 text-slate-800 transition" onclick="selectIncident('delay')">
+<div class="flex items-center justify-between mb-1">
+<span class="material-symbols-outlined text-slate-500 text-[22px]">schedule</span>
+</div>
+<div class="text-xs font-bold" data-i18n="incDelay">推迟出发</div>
+<div class="text-[10px] text-slate-500 mt-0.5" data-i18n="incDelaySub">压缩晨间安排</div>
+</button>
+<button class="incident-btn border rounded-xl p-3.5 text-left bg-white border-slate-200 hover:bg-slate-50 text-slate-800 transition" onclick="selectIncident('cancel')">
+<div class="flex items-center justify-between mb-1">
+<span class="material-symbols-outlined text-slate-500 text-[22px]">door_back</span>
+</div>
+<div class="text-xs font-bold" data-i18n="incCancel">展览临时闭馆</div>
+<div class="text-[10px] text-slate-500 mt-0.5" data-i18n="incCancelSub">同级别场馆替代</div>
+</button>
+<button class="incident-btn border rounded-xl p-3.5 text-left bg-white border-slate-200 hover:bg-slate-50 text-slate-800 transition" onclick="selectIncident('traffic')">
+<div class="flex items-center justify-between mb-1">
+<span class="material-symbols-outlined text-slate-500 text-[22px]">traffic</span>
+</div>
+<div class="text-xs font-bold" data-i18n="incTraffic">交通受阻</div>
+<div class="text-[10px] text-slate-500 mt-0.5" data-i18n="incTrafficSub">就近漫游锁定</div>
+</button>
+</div>
+</div>
+<!-- Before / After Visual Graphical Comparison Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6" data-purpose="reroute-comparison">
+<!-- Original Plan Card -->
+<div class="bg-white p-5 rounded-xl border thin-border opacity-75 relative">
+<div class="flex items-center justify-between mb-4" data-purpose="reroute-card-header">
+<div class="text-xs font-mono uppercase text-slate-400 font-semibold" data-i18n="planOriginal">原定方案</div>
+<span class="text-[10px] font-mono text-rose-500 bg-rose-50 px-2 py-0.5 rounded" id="rerouteRiskLabel">等待现场变化</span>
+</div>
+<div class="space-y-3 text-xs">
+<div class="p-3 bg-slate-50 rounded-lg border thin-border line-through text-slate-400 flex items-start gap-3">
+<span class="material-symbols-outlined text-[18px] text-slate-300">directions_walk</span>
+<div class="">
+<span class="font-bold" id="rerouteOriginalTime">—</span> <span id="rerouteOriginalTitle">当前城市原定活动</span>
+                <div class="text-[10px] text-rose-400 no-underline mt-0.5" id="rerouteOriginalReason">等待现场变化</div>
+</div>
+</div>
+<div class="p-3 bg-slate-50 rounded-lg border thin-border text-slate-600 flex items-start gap-3">
+<span class="material-symbols-outlined text-[18px] text-slate-400">nightlife</span>
+<div class="">
+<span class="font-bold" id="rerouteOriginalKeptTime">—</span> <span id="rerouteOriginalKeptTitle">其余高偏好活动</span>
+              </div>
+</div>
+</div>
+<div class="mt-4 text-[11px] text-slate-400" data-i18n="impactNotice" id="rerouteImpactNotice">选择现场变化后显示影响。</div>
+</div>
+<!-- Tuned Replacement Plan Card with Image & Badges -->
+<div class="bg-white p-5 rounded-xl border-2 border-brand-600 shadow-md relative">
+<span class="absolute -top-2.5 right-4 bg-emerald-700 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase font-mono shadow-sm" data-i18n="badgeOptimal">推荐方案</span>
+<div class="flex items-center justify-between mb-4" data-purpose="reroute-card-header">
+<div class="text-xs font-mono uppercase text-brand-700 font-bold" data-i18n="planTuned">改线方案</div>
+<span class="text-[10px] font-mono text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded font-semibold" id="rerouteCoverageLabel">等待改线计算</span>
+</div>
+<div class="space-y-3 text-xs">
+<!-- New Indoor Node with Photo Thumbnail -->
+<div class="p-3 bg-brand-50/70 border border-brand-200 rounded-lg text-brand-900 font-medium flex items-center gap-3">
+<div aria-hidden="true" class="w-12 h-12 rounded-lg shrink-0 bg-brand-100 text-brand-700 flex items-center justify-center"><span class="material-symbols-outlined">roofing</span></div>
+<div class="">
+<span class="font-bold" id="rerouteReplacementTime">—</span> <span id="rerouteReplacementTitle">当前城市室内替代安排</span>
+                <div class="text-[10px] text-brand-700 mt-0.5 font-normal" id="rerouteReplacementReason">等待改线计算</div>
+</div>
+</div>
+<div class="p-3 bg-slate-50 rounded-lg border thin-border text-slate-700 flex items-start gap-3">
+<span class="material-symbols-outlined text-[18px] text-brand-600">local_taxi</span>
+<div class="">
+<span class="font-bold" id="rerouteKeptTime">—</span> <span id="rerouteKeptTitle">其余高偏好活动</span>
+              </div>
+</div>
+</div>
+<div class="mt-4 text-[11px] text-brand-700 font-medium" data-i18n="impactPositive" id="rerouteImpactPositive">改线后影响将在这里显示。</div>
+</div>
+</div>
+<!-- Confirm Reroute Button -->
+<div class="flex justify-end pt-2">
+<button class="px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-lg transition shadow-md flex items-center gap-2" data-i18n="btnAcceptReroute" disabled onclick="confirmReroute()">接受新路线并同步至日程</button>
+</div>
+</section>
+<!-- END: ViewReroute -->
+<!-- ========================================== -->
+<!-- VIEW 05: KEEPSAKE (MEMORY ARCHIVE) -->
+<!-- ========================================== -->
+<!-- BEGIN: ViewKeepsake -->
+<section class="hidden max-w-5xl mx-auto space-y-6" id="view-05">
+<div class="flex items-center justify-between pb-4 border-b thin-border">
+<div>
+<h2 class="text-xl font-bold text-slate-900" data-i18n="keepsakeHeader">旅程档案与留存</h2>
+<p class="text-xs text-slate-500 mt-0.5" data-i18n="keepsakeSub">保存你的选择与反馈，让下一次旅程更适合你</p>
+</div>
+<span class="text-xs font-mono text-brand-600 bg-brand-50 px-2.5 py-1 rounded-md border border-brand-100 font-semibold" id="archiveCode">ARCHIVE TT-SHA-2026</span>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6" data-purpose="keepsake-layout">
+<!-- Left 2 Cols: Recap Highlights & Physical Tactile Keepsake Badges -->
+<div class="lg:col-span-2 space-y-6" data-purpose="keepsake-primary">
+<!-- Physical Keepsake Badges Section (Vintage Stamp, Vinyl Disc, Stub) -->
+<div class="bg-white p-5 rounded-xl border thin-border shadow-sm space-y-4">
+<div class="flex items-center justify-between" data-purpose="keepsake-section-header">
+<h3 class="text-sm font-semibold text-slate-800">实体数字纪念章 (Digital Keepsake Artifacts)</h3>
+<span class="text-[10px] font-mono text-slate-400">3 ARTIFACTS MINTED</span>
+</div>
+<div class="grid grid-cols-3 gap-4" data-purpose="keepsake-artifacts">
+<!-- Keepsake 1: Tactile Vinyl Disc -->
+<div class="p-3.5 bg-slate-50/80 rounded-xl border thin-border flex flex-col items-center text-center group">
+<div class="w-16 h-16 rounded-full vinyl-grooves border-2 border-slate-700 shadow-md flex items-center justify-center relative group-hover:rotate-45 transition duration-700">
+<div class="w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center border border-white/40">
+<div class="w-2 h-2 rounded-full bg-slate-900"></div>
+</div>
+</div>
+<div class="text-[11px] font-bold text-slate-800 mt-2.5" id="keepsakeBadge1">旅程偏好纪念章</div>
+<div class="text-[9px] font-mono text-slate-400 mt-0.5" id="keepsakeBadge1Meta">PERSONAL SIGNAL</div>
+</div>
+<!-- Keepsake 2: Vintage Postal Stamp -->
+<div class="p-3.5 bg-slate-50/80 rounded-xl border thin-border flex flex-col items-center text-center group">
+<div class="w-14 h-16 bg-white border-2 border-dashed border-brand-400 p-1 shadow-sm flex flex-col items-center justify-between">
+<div class="text-[7px] font-mono text-brand-600 font-bold tracking-widest" id="keepsakeCityCode">CITY</div>
+<span class="material-symbols-outlined text-brand-700 text-[20px]">apartment</span>
+<div class="text-[8px] font-mono text-slate-500 font-bold">¥ 20.00</div>
+</div>
+<div class="text-[11px] font-bold text-slate-800 mt-2.5" id="keepsakeCityStamp">当前城市旅程纪念邮戳</div>
+<div class="text-[9px] font-mono text-slate-400 mt-0.5" id="keepsakeHighlightMeta">本次生成后显示旅程摘要</div>
+</div>
+<!-- Keepsake 3: Gold Foil Boarding Stub -->
+<div class="p-3.5 bg-slate-50/80 rounded-xl border thin-border flex flex-col items-center text-center group">
+<div class="w-16 h-16 bg-gradient-to-tr from-amber-200 via-amber-100 to-amber-300 rounded-lg shadow-sm border border-amber-300 flex flex-col items-center justify-center p-1.5 text-amber-900">
+<span class="material-symbols-outlined text-[20px]">workspace_premium</span>
+<span class="text-[8px] font-mono font-bold mt-0.5" id="keepsakeFlightStub">等待生成</span>
+<span class="text-[7px] font-mono">FIRST CLASS</span>
+</div>
+<div class="text-[11px] font-bold text-slate-800 mt-2.5">首发旅人存根</div>
+<div class="text-[9px] font-mono text-slate-400 mt-0.5" id="keepsakeTravelerStub">当前旅人 · 18A</div>
+</div>
+</div>
+</div>
+<!-- Highlight Moments with Photo Cards -->
+<div class="bg-white p-5 rounded-xl border thin-border shadow-sm space-y-3">
+<h3 class="text-sm font-semibold text-slate-800" data-i18n="recapTitle">本程高光时刻</h3>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+<div class="rounded-xl border thin-border overflow-hidden group">
+<div class="h-28 overflow-hidden relative">
+<div aria-hidden="true" class="w-full h-full bg-gradient-to-br from-brand-100 to-slate-200 flex items-center justify-center"><span class="material-symbols-outlined text-4xl text-brand-600">location_city</span></div>
+<span class="absolute top-2 left-2 text-[9px] font-mono text-white bg-brand-700/90 px-1.5 py-0.5 rounded">空间高光</span>
+</div>
+<div class="p-3 bg-white">
+<div class="text-xs font-bold text-slate-800" data-i18n="recapHigh1Title">等待本次旅程生成</div>
+<p class="text-[11px] text-slate-500 mt-1 leading-relaxed" data-i18n="recapHigh1Desc">生成旅程后，这里会显示本次路线高光。</p>
+</div>
+</div>
+<div class="rounded-xl border thin-border overflow-hidden group">
+<div class="h-28 overflow-hidden relative">
+<div aria-hidden="true" class="w-full h-full bg-gradient-to-br from-indigo-100 to-brand-100 flex items-center justify-center"><span class="material-symbols-outlined text-4xl text-indigo-700">auto_awesome</span></div>
+<span class="absolute top-2 left-2 text-[9px] font-mono text-white bg-indigo-700/90 px-1.5 py-0.5 rounded">旋律印记</span>
+</div>
+<div class="p-3 bg-white">
+<div class="text-xs font-bold text-slate-800" data-i18n="recapHigh2Title">等待本次旅程生成</div>
+<p class="text-[11px] text-slate-500 mt-1 leading-relaxed" data-i18n="recapHigh2Desc">提交反馈后，这里会显示下一次推荐依据。</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Confirmed Aesthetic Profile -->
+<div class="bg-white p-5 rounded-xl border thin-border shadow-sm space-y-3">
+<h3 class="text-sm font-semibold text-slate-800" data-i18n="tasteTitle">已沉淀的旅行偏好模型</h3>
+<div class="grid grid-cols-3 gap-2 text-center text-xs" data-purpose="preference-metrics">
+<div class="p-3 bg-slate-50 rounded-lg border thin-border">
+<div class="text-slate-400 text-[10px] uppercase font-mono" data-i18n="tastePace">步频偏好</div>
+<div class="text-sm font-bold text-slate-800 mt-1" id="tastePaceValue">按本次路线计算</div>
+</div>
+<div class="p-3 bg-slate-50 rounded-lg border thin-border">
+<div class="text-slate-400 text-[10px] uppercase font-mono" data-i18n="tasteNight">夜间偏好</div>
+<div class="text-xs font-bold text-slate-800 mt-1" data-i18n="tasteNightVal" id="tasteNightValue">按本次兴趣计算</div>
+</div>
+<div class="p-3 bg-slate-50 rounded-lg border thin-border">
+<div class="text-slate-400 text-[10px] uppercase font-mono" data-i18n="tasteDining">餐饮偏好</div>
+<div class="text-sm font-bold text-slate-800 mt-1" data-i18n="tasteDiningVal" id="tasteDiningValue">按本次兴趣计算</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Col: Feedback History & Next Seed Memory -->
+<div class="space-y-4">
+<div class="bg-white p-5 rounded-xl border thin-border shadow-sm space-y-4">
+<h3 class="text-sm font-semibold text-slate-800" data-i18n="feedbackTitle">最近的旅行反馈</h3>
+<div class="space-y-2 text-xs" id="feedbackLogContainer">
+<div class="p-2.5 bg-slate-50 rounded-lg text-slate-600 flex justify-between items-center border thin-border">
+<span>等待本次反馈</span>
+<span class="text-brand-700 bg-brand-50 px-2 py-0.5 rounded font-semibold text-[11px]">—</span>
+</div>
+<div class="p-2.5 bg-slate-50 rounded-lg text-slate-600 flex justify-between items-center border thin-border">
+<span>等待本次反馈</span>
+<span class="text-amber-700 bg-amber-50 px-2 py-0.5 rounded font-semibold text-[11px]">—</span>
+</div>
+</div>
+<!-- Next Seed Itinerary Recommendation Card -->
+<div class="pt-3 border-t thin-border space-y-2">
+<div class="text-[10px] text-slate-400 uppercase font-mono" data-i18n="nextMemory">下一次推荐预设</div>
+<div class="rounded-lg border thin-border overflow-hidden">
+<div class="p-3 bg-brand-50/50">
+<div class="text-xs font-bold text-slate-900" data-i18n="nextMemoryVal">下一次旅程将继续使用本次反馈</div>
+<div class="text-[10px] text-brand-700 mt-1 font-mono font-medium" id="nextMemoryMeta">SQLITE · PERSONAL HISTORY</div>
+</div>
+</div>
+</div>
+<button class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold transition shadow-sm flex items-center justify-center gap-1.5" data-i18n="btnExportArchive" onclick="showToast(i18n[currentLang].toastArchived)">导出行程</button>
+</div>
+</div>
+</div>
+</section>
+<!-- END: ViewKeepsake -->
+</div>
+<!-- Bottom Global Notice Bar -->
+<footer class="h-8 bg-white border-t thin-border px-6 flex items-center justify-between text-[11px] text-slate-400 shrink-0 font-mono" data-purpose="bottom-notice-bar">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+<span data-i18n="demoNotice" class="">实时生成 · SQLite 已连接</span>
+</div>
+<div class="tracking-wider">TripTune · Personal Travel Engine</div>
+</footer>
+</main>
+<!-- END: Main Workstation Viewport -->
+<!-- Toast Interactive Feedback Popup -->
+<div aria-hidden="true" aria-live="polite" class="fixed bottom-12 right-8 bg-slate-900 text-white px-4 py-2.5 rounded-lg text-xs shadow-xl transform translate-y-16 opacity-0 transition duration-300 pointer-events-none z-50 flex items-center gap-2" id="toastNotification" role="status">
+<span class="material-symbols-outlined text-[16px] text-emerald-400">check_circle</span>
+<span class="">已更新行程状态</span>
+</div>
+<dialog class="t-modal max-w-lg rounded-2xl border thin-border bg-white p-0 shadow-2xl" id="profileEditor" aria-labelledby="profileEditorTitle" style="width:calc(100% - 2rem)">
+<form class="p-5 sm:p-6 space-y-5" id="profileEditorForm" method="dialog">
+<div class="flex items-start justify-between gap-4">
+<div>
+<h2 class="text-lg font-bold text-slate-900" id="profileEditorTitle">我的旅行偏好</h2>
+<p class="mt-1 text-xs text-slate-500">这里的修改会写入数据库，并参与下一次行程生成。</p>
+</div>
+<button aria-label="关闭个人偏好" class="w-10 h-10 rounded-lg text-slate-500 hover:bg-slate-100 flex items-center justify-center" id="closeProfileEditor" type="button"><span class="material-symbols-outlined">close</span></button>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<div>
+<label class="block text-xs font-semibold text-slate-700 mb-1.5" for="profileName">怎么称呼你</label>
+<input class="w-full rounded-lg border thin-border bg-slate-50 px-3 py-2.5 text-sm" id="profileName" maxlength="24" required type="text">
+</div>
+<div>
+<label class="block text-xs font-semibold text-slate-700 mb-1.5" for="profileBudget">常用单次旅行预算</label>
+<input class="w-full rounded-lg border thin-border bg-slate-50 px-3 py-2.5 text-sm" id="profileBudget" max="100000" min="500" required step="100" type="number">
+</div>
+</div>
+<div>
+<label class="block text-xs font-semibold text-slate-700 mb-1.5" for="profilePace">平时喜欢怎样逛</label>
+<select class="w-full rounded-lg border thin-border bg-slate-50 px-3 py-2.5 text-sm" id="profilePace">
+<option value="relaxed">慢慢逛，每天留足休息</option>
+<option value="balanced">有重点，也有自由时间</option>
+<option value="dense">尽量多看，但少走回头路</option>
+</select>
+</div>
+<div>
+<label class="block text-xs font-semibold text-slate-700 mb-1.5" for="profileInterests">长期兴趣</label>
+<textarea class="w-full min-h-24 rounded-lg border thin-border bg-slate-50 px-3 py-2.5 text-sm leading-relaxed" id="profileInterests" maxlength="260" placeholder="用逗号分隔，例如：建筑、早市、书店"></textarea>
+<p class="mt-1.5 text-[11px] text-slate-500">最多 12 项；也可以在出发简报里为某一次旅程临时添加。</p>
+</div>
+<p aria-live="polite" class="hidden rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700" id="profileEditorError"></p>
+<button class="text-left text-xs font-semibold text-brand-700 hover:underline" id="switchProfileTraveler" type="button">切换到另一位测试旅人</button>
+<div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-1">
+<button class="px-4 py-2.5 rounded-lg border thin-border text-sm font-semibold text-slate-700" id="cancelProfileEditor" type="button">取消</button>
+<button class="px-5 py-2.5 rounded-lg bg-brand-700 text-white text-sm font-semibold" id="saveProfileEditor" type="submit">保存并用于下一次生成</button>
+</div>
+</form>
+</dialog>
+<dialog class="t-modal max-w-lg rounded-2xl border thin-border bg-white p-0 shadow-2xl" id="activityEditor" aria-labelledby="activityEditorTitle" style="width:calc(100% - 2rem)">
+<form class="p-5 sm:p-6 space-y-5" id="activityEditorForm" method="dialog">
+<div class="flex items-start justify-between gap-4">
+<div>
+<div class="text-[10px] font-mono font-bold tracking-wider text-brand-700" id="activityEditorDay">今日安排</div>
+<h2 class="mt-1 text-lg font-bold text-slate-900" id="activityEditorTitle">调整这一站</h2>
+<p class="mt-1 text-xs text-slate-500">保存后会同时更新旅程导览、今日漫游、改线依据和旅程留存。</p>
+</div>
+<button aria-label="关闭活动编辑" class="w-10 h-10 rounded-lg text-slate-500 hover:bg-slate-100 flex items-center justify-center" id="closeActivityEditor" type="button"><span class="material-symbols-outlined">close</span></button>
+</div>
+<input id="activityEditorId" type="hidden">
+<div>
+<label class="block text-xs font-semibold text-slate-700 mb-1.5" for="activityEditorName">这一站的名称</label>
+<input class="w-full rounded-lg border thin-border bg-slate-50 px-3 py-2.5 text-sm" id="activityEditorName" maxlength="60" required type="text">
+</div>
+<div>
+<label class="block text-xs font-semibold text-slate-700 mb-1.5" for="activityEditorTime">到访时间</label>
+<input class="w-full rounded-lg border thin-border bg-slate-50 px-3 py-2.5 text-sm font-mono" id="activityEditorTime" pattern="[0-9]{1,2}:[0-9]{2} *[-–—] *[0-9]{1,2}:[0-9]{2}" placeholder="09:30 - 11:00" required type="text">
+</div>
+<div>
+<label class="block text-xs font-semibold text-slate-700 mb-1.5" for="activityEditorDescription">安排说明</label>
+<textarea class="w-full min-h-24 rounded-lg border thin-border bg-slate-50 px-3 py-2.5 text-sm leading-relaxed" id="activityEditorDescription" maxlength="240" required></textarea>
+</div>
+<p aria-live="polite" class="hidden rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700" id="activityEditorError"></p>
+<div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-1">
+<button class="px-4 py-2.5 rounded-lg border thin-border text-sm font-semibold text-slate-700" id="cancelActivityEditor" type="button">取消</button>
+<button class="px-5 py-2.5 rounded-lg bg-brand-700 text-white text-sm font-semibold" id="saveActivityEditor" type="submit">保存并同步到所有页面</button>
+</div>
+</form>
+</dialog>
+<!-- BEGIN: Core Client Scripts -->
+<script data-purpose="bilingual-dictionary">
+  /**
+   * Pure Bilingual Dictionary
+   * Strictly pure Chinese for 'zh' and strictly pure English for 'en'.
+   * Never combine them into hybrid strings like "出发简报 (Departure Brief)".
+   */
+  const i18n = {
+    zh: {
+      activeTraveler: "当前旅人",
+      navBrief: "出发简报",
+      navOverview: "旅程导览",
+      navRoam: "今日漫游",
+      navReroute: "途中改线",
+      navKeepsake: "旅程留存",
+      consoleMet: "旅程状态",
+      waypoint: "当前目的地:",
+      syncFreq: "数据同步:",
+      flightRoute: "目的地待生成",
+      flightSpeed: "行程状态：准备生成",
+      flightTime: "本地时间：正在同步",
+      tab00: "登机入口",
+      tab01: "出发简报",
+      tab02: "旅程导览",
+      tab03: "今日漫游",
+      tab04: "途中改线",
+      tab05: "旅程留存",
+      flightStatus: "填写偏好后生成旅程",
+      flightAlt: "等待旅程信息",
+      windowCity: "目的地待生成",
+      boardingSubtitle: "为你而来的旅行计划",
+      boardingTitle: "为你量身定制的城市漫步",
+      boardingDesc: "从你的兴趣、节奏与预算出发，也为沿途变化留出余地",
+      boardingPassBrand: "TRIPTUNE AIR · PERSONAL VOYAGE",
+      boardingClass: "头等舱",
+      passPassenger: "旅客姓名",
+      passFlight: "航班代号",
+      passDate: "签发日期",
+      passSeat: "座位 / 登机门",
+      enterBriefBtn: "开始规划旅程",
+      skipSwipe: "已有想法？直接填写旅行偏好",
+      briefHeader: "出发需求简报",
+      briefSub: "告诉我们你的兴趣、节奏与预算，生成真正适合你的旅程",
+      briefBasic: "基本参数",
+      briefDest: "目的地",
+      briefDays: "出行天数",
+      briefBudget: "预算范围",
+      briefParty: "同行人数",
+      briefInterests: "这次想体验什么",
+      briefPace: "漫游步调",
+      paceChill: "松弛漫步",
+      paceChillSub: "一天安排两处，慢慢走、慢慢看",
+      paceBalance: "平衡探索",
+      paceBalanceSub: "一天安排三处，逛玩和休息都顾到",
+      paceDense: "充实饱满",
+      paceDenseSub: "一天安排四处，想多看一些也不绕路",
+      briefCalibTitle: "偏好匹配概览",
+      calibArch: "建筑与空间审美",
+      calibAcoustic: "音乐与夜生活",
+      calibCrowd: "避开拥挤地标",
+      calibNote: "选择目的地与兴趣后，这里会显示本次生成依据。",
+      btnGeneratePlan: "生成我的专属旅程",
+      overviewHeader: "旅程全景导览",
+      overviewSub: "根据本次天数生成安排与城市移动关系",
+      btnViewToday: "查看今日漫游 →",
+      metricTransit: "交通接驳",
+      metricTransitVal: "等待本次旅程生成",
+      metricTransitSub: "按当前路线计算",
+      metricStay: "精选居所",
+      metricStayVal: "等待本次旅程生成",
+      metricStaySub: "按目的地计算",
+      metricBudget: "预算消耗进度",
+      metricBudgetSub: "按本次预算计算",
+      metricRadius: "探索半径",
+      metricRadiusSub: "高密度人文街区",
+      day1Dist: "等待本次旅程生成",
+      day1Title: "等待本次旅程生成",
+      day1Desc: "输入目的地、天数与兴趣后生成当天安排。",
+      badgeToday: "进行中",
+      day2Dist: "等待本次旅程生成",
+      day2Title: "等待本次旅程生成",
+      day2Desc: "输入目的地、天数与兴趣后生成当天安排。",
+      day3Dist: "等待本次旅程生成",
+      day3Title: "等待本次旅程生成",
+      day3Desc: "输入目的地、天数与兴趣后生成当天安排。",
+      whyFitsTitle: "为什么适合你",
+      whyPoint1Title: "按兴趣挑选重点",
+      whyPoint1Body: "生成后显示本次路线为什么适合你。",
+      whyPoint2Title: "按节奏安排路程",
+      whyPoint2Body: "生成后显示每天的移动距离和休息余量。",
+      btnEnterDay2: "进入今日漫游详情",
+      roamHeader: "今日漫游路线",
+      roamSub: "按时间顺序查看今天去哪儿；你的反馈会影响下一次推荐",
+      btnChangeRoute: "途中发生变化 (改线)",
+      actTypeArch: "建筑漫步",
+      node1Title: "等待本次旅程生成",
+      node1Desc: "输入目的地后显示第一项安排。",
+      actTypeDine: "轻食美学",
+      node2Title: "等待本次旅程生成",
+      node2Desc: "输入目的地后显示第二项安排。",
+      actTypeBook: "独立阅读",
+      node3Title: "等待本次旅程生成",
+      node3Desc: "输入目的地后显示第三项安排。",
+      actTypeJazz: "夜间现场",
+      node4Title: "等待本次旅程生成",
+      node4Desc: "输入目的地后显示第四项安排。",
+      fbLike: "很像我",
+      fbRushed: "太赶了",
+      fbDislike: "不喜欢",
+      rerouteHeader: "途中动态改线",
+      rerouteSub: "应对天气突变或临时体能状况，一键平滑置换接续行程",
+      selectCondition: "请选择现场突发情况：",
+      incRain: "突发降雨",
+      incRainSub: "转入全室内路线",
+      incDelay: "推迟出发",
+      incDelaySub: "压缩晨间安排",
+      incCancel: "展览临时闭馆",
+      incCancelSub: "同级别场馆替代",
+      incTraffic: "交通受阻",
+      incTrafficSub: "就近漫游锁定",
+      planOriginal: "原定方案",
+      impactNotice: "选择现场变化后显示影响。",
+      badgeOptimal: "推荐方案",
+      planTuned: "改线方案",
+      impactPositive: "改线后影响将在这里显示。",
+      btnAcceptReroute: "接受新路线并同步至日程",
+      keepsakeHeader: "旅程档案与留存",
+      keepsakeSub: "保存你的选择与反馈，让下一次旅程更适合你",
+      recapTitle: "本程高光时刻",
+      recapHigh1Title: "等待本次旅程生成",
+      recapHigh1Desc: "生成旅程后，这里会显示本次路线高光。",
+      recapHigh2Title: "等待本次旅程生成",
+      recapHigh2Desc: "提交反馈后，这里会显示下一次推荐依据。",
+      tasteTitle: "已沉淀的旅行偏好模型",
+      tastePace: "步频偏好",
+      tasteNight: "夜间偏好",
+      tasteNightVal: "现场爵士 > 景观酒吧",
+      tasteDining: "餐饮偏好",
+      tasteDiningVal: "主理人小馆",
+      feedbackTitle: "最近的旅行反馈",
+      nextMemory: "下一次推荐预设",
+      nextMemoryVal: "下一次旅程将继续使用本次反馈",
+      btnExportArchive: "导出行程",
+      demoNotice: "实时生成 · SQLite 已连接",
+      toastPlanGenerated: "已根据你的旅行偏好生成旅程。",
+      toastRerouted: "新路线已同步至今日漫游。",
+      toastFeedbackRecorded: "反馈已记录，下次会据此调整安排。",
+      toastArchived: "手札已封存并生成离线纪念卡。"
+    },
+    en: {
+      activeTraveler: "VOYAGER",
+      navBrief: "Departure Brief",
+      navOverview: "Voyage Guide",
+      navRoam: "Today's Roam",
+      navReroute: "Reroute",
+      navKeepsake: "Keepsake",
+      consoleMet: "TRIP STATUS",
+      waypoint: "DESTINATION:",
+      syncFreq: "DATA SYNC:",
+      flightRoute: "DESTINATION PENDING",
+      flightSpeed: "TRIP STATUS: READY TO PLAN",
+      flightTime: "LOCAL TIME: SYNCING",
+      tab00: "Boarding",
+      tab01: "Departure Brief",
+      tab02: "Voyage Guide",
+      tab03: "Today's Roam",
+      tab04: "Reroute",
+      tab05: "Keepsake",
+      flightStatus: "COMPLETE YOUR PREFERENCES TO BUILD A TRIP",
+      flightAlt: "AWAITING TRIP DETAILS",
+      windowCity: "DESTINATION PENDING",
+      boardingSubtitle: "PERSONAL VOYAGE",
+      boardingTitle: "YOUR TRIP, TUNED TO YOU.",
+      boardingDesc: "Calibrated to personal rhythm, aesthetic taste and street ambiance",
+      boardingPassBrand: "TRIPTUNE AIR · PERSONAL VOYAGE",
+      boardingClass: "FIRST CLASS",
+      passPassenger: "PASSENGER",
+      passFlight: "FLIGHT",
+      passDate: "DATE",
+      passSeat: "SEAT / GATE",
+      enterBriefBtn: "Plan my trip",
+      skipSwipe: "Already have ideas? Edit your trip preferences",
+      briefHeader: "Departure Brief",
+      briefSub: "Tell us your interests, pace and budget to generate a trip that fits",
+      briefBasic: "Parameters",
+      briefDest: "Destination",
+      briefDays: "Duration",
+      briefBudget: "Budget Range",
+      briefParty: "Travel Party",
+      briefInterests: "Core Interests",
+      briefPace: "Roaming Rhythm",
+      paceChill: "Gentle Roam",
+      paceChillSub: "Two places a day, with time to linger",
+      paceBalance: "Balanced Pace",
+      paceBalanceSub: "Three places a day, with room to rest",
+      paceDense: "Full Immersion",
+      paceDenseSub: "Four places a day, without backtracking",
+      briefCalibTitle: "Aesthetic Tuning",
+      calibArch: "Architecture & Space",
+      calibAcoustic: "Music & Nightlife",
+      calibCrowd: "Avoid Crowds",
+      calibNote: "Choose a destination and interests to see this itinerary's inputs.",
+      btnGeneratePlan: "Generate My Trip",
+      overviewHeader: "Voyage Guide",
+      overviewSub: "A tuned backbone based on your duration and urban geography",
+      btnViewToday: "View Today's Roam →",
+      metricTransit: "Transit Mode",
+      metricTransitVal: "Awaiting itinerary",
+      metricTransitSub: "Calculated from route",
+      metricStay: "Suggested Area",
+      metricStayVal: "Awaiting itinerary",
+      metricStaySub: "Calculated from destination",
+      metricBudget: "Estimated Spend",
+      metricBudgetSub: "Calculated from this budget",
+      metricRadius: "Exploration Radius",
+      metricRadiusSub: "High-Density Cultural Hub",
+      day1Dist: "Awaiting itinerary",
+      day1Title: "Awaiting itinerary",
+      day1Desc: "Choose a destination, duration and interests to generate this day.",
+      badgeToday: "CURRENT",
+      day2Dist: "Awaiting itinerary",
+      day2Title: "Awaiting itinerary",
+      day2Desc: "Choose a destination, duration and interests to generate this day.",
+      day3Dist: "Awaiting itinerary",
+      day3Title: "Awaiting itinerary",
+      day3Desc: "Choose a destination, duration and interests to generate this day.",
+      whyFitsTitle: "Why It Fits You",
+      whyPoint1Title: "Highlights chosen from your interests",
+      whyPoint1Body: "Generate the itinerary to see why each stop fits.",
+      whyPoint2Title: "Travel time matched to your pace",
+      whyPoint2Body: "Generate the itinerary to see daily distance and breathing room.",
+      btnEnterDay2: "Enter Day 02 Roam",
+      roamHeader: "Today's Roam",
+      roamSub: "See today's stops in order; your feedback shapes the next recommendation",
+      btnChangeRoute: "Live Re-Tune (Reroute)",
+      actTypeArch: "Architecture",
+      node1Title: "Awaiting itinerary",
+      node1Desc: "Choose a destination to show the first activity node.",
+      actTypeDine: "Light Culinary",
+      node2Title: "Awaiting itinerary",
+      node2Desc: "Choose a destination to show the second activity node.",
+      actTypeBook: "Reading Nook",
+      node3Title: "Awaiting itinerary",
+      node3Desc: "Choose a destination to show the third activity node.",
+      actTypeJazz: "Live Stage",
+      node4Title: "Awaiting itinerary",
+      node4Desc: "Choose a destination to show the fourth activity node.",
+      fbLike: "Like Me",
+      fbRushed: "Too Rushed",
+      fbDislike: "Not For Me",
+      rerouteHeader: "Live Reroute",
+      rerouteSub: "Seamlessly replace upcoming itinerary when weather or stamina shifts",
+      selectCondition: "Select On-Site Incident:",
+      incRain: "Sudden Rain",
+      incRainSub: "Shift to full indoor route",
+      incDelay: "Delayed Start",
+      incDelaySub: "Compress morning schedule",
+      incCancel: "Venue Closed",
+      incCancelSub: "Equivalent venue swap",
+      incTraffic: "Traffic Jam",
+      incTrafficSub: "Lock neighborhood walk",
+      planOriginal: "Original Itinerary",
+      impactNotice: "Select an on-site incident to see its impact.",
+      badgeOptimal: "OPTIMAL TUNE",
+      planTuned: "Re-Tuned Plan",
+      impactPositive: "The recalculated impact will appear here.",
+      btnAcceptReroute: "Accept & Sync Itinerary",
+      keepsakeHeader: "Memory Keepsake",
+      keepsakeSub: "Saved choices and feedback for your next trip",
+      recapTitle: "Key Voyage Highlights",
+      recapHigh1Title: "Awaiting itinerary",
+      recapHigh1Desc: "Your generated route highlights will appear here.",
+      recapHigh2Title: "Awaiting itinerary",
+      recapHigh2Desc: "Your next recommendation basis will appear after feedback.",
+      tasteTitle: "Confirmed Aesthetic Profile",
+      tastePace: "Cadence",
+      tasteNight: "Nightlife",
+      tasteNightVal: "Live Jazz > Sky Bars",
+      tasteDining: "Dining Tone",
+      tasteDiningVal: "Boutique Bistros",
+      feedbackTitle: "Recent Interactive Feedback",
+      nextMemory: "Upcoming Seed Memory",
+      nextMemoryVal: "Your next trip will use this feedback",
+      btnExportArchive: "Export itinerary",
+      demoNotice: "Live generation · SQLite connected",
+      toastPlanGenerated: "Custom itinerary generated and calibrated!",
+      toastRerouted: "Itinerary re-tuned and pushed to mobile.",
+      toastFeedbackRecorded: "Feedback recorded. Model updating in real-time...",
+      toastArchived: "Voyage dossier exported to digital vault."
+    }
+  };
+</script>
+<script data-purpose="application-logic">
+  let currentLang = 'zh';
+  let currentView = '00';
+  let currentTraveler = 'lin';
+
+  const travelerData = {
+    lin: {
+      zh: {
+        name: "林默",
+        display: "林默",
+        avatar: "LM",
+        signals: "旅行信号：当代建筑 / 独立黑胶 / 爵士酒吧",
+        budget: "¥5,000",
+        interests: ["当代建筑", "独立书店", "深夜爵士", "小众手冲咖啡", "复古黑胶"]
+      },
+      en: {
+        name: "Lin Mo",
+        display: "Lin Mo",
+        avatar: "LM",
+        signals: "SIGNALS: ARCH / VINYL / LIVE JAZZ",
+        budget: "¥5,000",
+        interests: ["Architecture", "Bookstores", "Live Jazz", "Pour-Over Coffee", "Vintage Vinyl"]
+      }
+    },
+    zhou: {
+      zh: {
+        name: "周野",
+        display: "周野",
+        avatar: "ZY",
+        signals: "旅行信号：骑行探索 / 山系穿搭 / 精酿啤酒",
+        budget: "¥8,000",
+        interests: ["城市骑行", "精酿酒馆", "工业遗存", "黑胶唱片", "复古市集"]
+      },
+      en: {
+        name: "Zhou Ye",
+        display: "Zhou Ye",
+        avatar: "ZY",
+        signals: "SIGNALS: CYCLING / CRAFT BEER / HERITAGE",
+        budget: "¥8,000",
+        interests: ["Urban Cycling", "Craft Taprooms", "Industrial Sites", "Vinyl Digging", "Vintage Flea"]
+      }
+    }
+  };
+
+  function setLanguage(lang) {
+    currentLang = lang;
+    
+    const zhBtn = document.getElementById('langZhBtn');
+    const enBtn = document.getElementById('langEnBtn');
+    
+    if (lang === 'zh') {
+      zhBtn.className = 'px-2.5 py-0.5 rounded-full font-medium transition bg-white text-slate-900 shadow-sm';
+      enBtn.className = 'px-2.5 py-0.5 rounded-full font-medium transition text-slate-500 hover:text-slate-900';
+      document.documentElement.lang = 'zh-CN';
+    } else {
+      enBtn.className = 'px-2.5 py-0.5 rounded-full font-medium transition bg-white text-slate-900 shadow-sm';
+      zhBtn.className = 'px-2.5 py-0.5 rounded-full font-medium transition text-slate-500 hover:text-slate-900';
+      document.documentElement.lang = 'en';
+    }
+
+    document.querySelectorAll('[data-i18n]').forEach(elem => {
+      const key = elem.getAttribute('data-i18n');
+      if (i18n[lang][key]) {
+        elem.textContent = i18n[lang][key];
+      }
+    });
+
+    if (typeof window.tripTuneRefreshLanguage === 'function') {
+      window.tripTuneRefreshLanguage();
+    } else {
+      updateTravelerUI();
+    }
+  }
+
+  function toggleTraveler() {
+    if (typeof window.tripTuneToggleTraveler === 'function') {
+      return window.tripTuneToggleTraveler();
+    }
+    currentTraveler = currentTraveler === 'lin' ? 'zhou' : 'lin';
+    updateTravelerUI();
+    showToast(currentLang === 'zh' ? `已切换旅人为：${travelerData[currentTraveler].zh.name}` : `Switched voyager to: ${travelerData[currentTraveler].en.name}`);
+  }
+
+  function updateTravelerUI() {
+    const data = travelerData[currentTraveler][currentLang];
+    
+    document.getElementById('travelerNameDisplay').textContent = data.display;
+    document.getElementById('travelerAvatar').textContent = data.avatar;
+    
+    document.querySelectorAll('.traveler-dynamic-name').forEach(el => {
+      el.textContent = data.name;
+    });
+
+    document.getElementById('tuningSummaryText').textContent = data.signals;
+
+    const budgetSelect = document.getElementById('briefBudgetSelect');
+    if (budgetSelect) {
+      budgetSelect.value = data.budget;
+    }
+
+    const container = document.getElementById('interestTagsContainer');
+    if (container) {
+      container.innerHTML = '';
+      data.interests.forEach((item, index) => {
+        const btn = document.createElement('button');
+        btn.className = `interest-tag px-3 py-1.5 rounded-lg border text-xs font-medium flex items-center gap-1.5 ${
+          index < 3 ? 'bg-brand-50 border-brand-200 text-brand-700' : 'bg-slate-50 border-slate-200 text-slate-600'
+        }`;
+        btn.innerHTML = `<span class="material-symbols-outlined text-[14px]">${index === 0 ? 'apartment' : index === 1 ? 'menu_book' : index === 2 ? 'nightlife' : 'local_cafe'}</span>${item}`;
+        container.appendChild(btn);
+      });
+    }
+  }
+
+  function switchView(viewKey) {
+    if (typeof window.tripTuneCanNavigate === 'function' && !window.tripTuneCanNavigate(viewKey)) {
+      return;
+    }
+    currentView = viewKey;
+    if (viewKey === '06') window.tripTuneRenderPersonal?.();
+
+    for (let i = 0; i <= 6; i++) {
+      const keyStr = i < 10 ? `0${i}` : `${i}`;
+      const viewEl = document.getElementById(`view-${keyStr}`);
+      if (viewEl) {
+        viewEl.classList.add('hidden');
+      }
+    }
+
+    const targetView = document.getElementById(`view-${viewKey}`);
+    if (targetView) {
+      targetView.classList.remove('hidden');
+    }
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      if (btn.getAttribute('data-tab') === viewKey) {
+        btn.setAttribute('aria-current', 'page');
+        btn.className = 'tab-btn px-2.5 py-1 text-xs font-semibold rounded text-slate-900 bg-white shadow-sm';
+      } else {
+        btn.removeAttribute('aria-current');
+        btn.className = 'tab-btn px-2.5 py-1 text-xs font-medium rounded text-slate-600 hover:text-slate-900';
+      }
+    });
+
+    document.querySelectorAll('.nav-item').forEach(item => {
+      if (item.getAttribute('data-nav') === viewKey) {
+        item.setAttribute('aria-current', 'page');
+        item.className = 'nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-bold text-brand-700 bg-brand-50 border border-brand-200 shadow-sm';
+      } else {
+        item.removeAttribute('aria-current');
+        item.className = 'nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50 transition';
+      }
+    });
+
+    document.getElementById('workspaceContainer').scrollTop = 0;
+  }
+
+  function enterBoarding() {
+    switchView('01');
+  }
+
+  function selectIncident(type) {
+    document.querySelectorAll('.incident-btn').forEach(b => {
+      b.className = 'incident-btn border rounded-xl p-3.5 text-left bg-white border-slate-200 hover:bg-slate-50 text-slate-800 transition';
+    });
+    event.currentTarget.className = 'incident-btn border-2 rounded-xl p-3.5 text-left bg-brand-50/70 border-brand-600 text-brand-900 transition shadow-sm';
+    showToast(currentLang === 'zh' ? '已重新评估周边路线与时间差...' : 'Re-evaluating neighborhood corridors & buffers...');
+  }
+
+  function confirmReroute() {
+    switchView('03');
+    showToast(i18n[currentLang].toastRerouted);
+  }
+
+  function recordFeedback(sentiment) {
+    showToast(`${i18n[currentLang].toastFeedbackRecorded} (${sentiment})`);
+  }
+
+  let toastTimer = null;
+  function showToast(message) {
+    const toast = document.getElementById('toastNotification');
+    toast.querySelector('span:last-child').textContent = message;
+    toast.classList.remove('opacity-0', 'translate-y-16');
+    toast.classList.add('opacity-100', 'translate-y-0');
+    toast.setAttribute('aria-hidden', 'false');
+
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      toast.classList.remove('opacity-100', 'translate-y-0');
+      toast.classList.add('opacity-0', 'translate-y-16');
+      toast.setAttribute('aria-hidden', 'true');
+    }, 2800);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('toggleTravelerBtn').addEventListener('click', toggleTraveler);
+    setLanguage('zh');
+    switchView('00');
+  });
+</script>
+<!-- END: Core Client Scripts -->
+<script src="/city-images.js"></script>
+<script src="/integration.js"></script>
+
+
+</body></html>

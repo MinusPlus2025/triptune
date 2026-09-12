@@ -1,0 +1,13 @@
+node_modules
+data
+frontend/assets/window
+.env
+.env.*
+*.pem
+*.key
+.git
+*.zip
+*.log
+data/*.sqlite
+data/*.sqlite-shm
+data/*.sqlite-wal

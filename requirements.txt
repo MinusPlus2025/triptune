@@ -1,0 +1,2 @@
+# The first deployment path uses Node.js built-ins only.
+# This file is kept for platforms that detect Python projects.

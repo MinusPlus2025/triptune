@@ -1,0 +1,32 @@
+# 魔搭创空间部署
+
+依据中客松选手手册第 07、08、11 节：必须提供魔搭创空间 Demo 链接，路演状态为 Running。项目采用 Docker，不适合 Static 托管。
+
+## 配置
+
+- Node.js 24，启动命令 `node backend/server.js`。
+- 监听 `0.0.0.0:7860`。
+- SQLite 目录 `/mnt/workspace/triptune`，由应用自动创建。平台重命名或迁移仍可能丢失数据，需另行备份。
+- 仅选免费硬件；付费资源需单独确认。
+- 部署 Token 只通过本地环境变量 `MODELSCOPE_API_KEY` 使用，不提交到代码或远程地址中。
+- 当前应用使用规则推荐器，没有调用模型 API，不能宣传成已完成大模型推荐。
+
+## 上线前检查
+
+- 完成魔搭 Docker 所需的账号绑定和实名认证。
+- 确认创空间可见性；参赛 Demo 必须能由评委访问。
+- 不上传本地 SQLite、个人照片、真实旅人信息、密钥或环境配置文件。
+- 当前两个测试旅人是共享演示档案，不可用于保存真实个人隐私；正式个人空间需账号隔离。
+- `frontend/assets/window/SOURCES.md` 中的第三方窗框和音效尚未核实再分发授权，发布前需授权或替换。
+
+## 验收
+
+1. `npm test` 全部通过。
+2. 查看 Docker build 日志，再查看 run 日志，确认 Running。
+3. 未登录访问公开链接，测试生成、换城市、反馈、改线、编辑、历史旅程和导出。
+4. 重启后验证测试旅程保留。
+5. 确认最终访问地址后生成二维码，不使用 localhost。
+
+提交：Demo 链接和操作说明、2min+ 演示视频、80×180cm（4:9）高清海报；GitHub 可选。手册提交栏标注 13 日上午 10 点，与日程表的提交准备时间不同，需以组委会最新通知确认。
+
+官方部署流程：https://github.com/modelscope/modelscope-skills/blob/main/skills/ms-studio-deploy/SKILL.md
