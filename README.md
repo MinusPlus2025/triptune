@@ -63,7 +63,7 @@ SQLite 文件默认位于 `data/triptune.sqlite`，也可通过 `TRIPTUNE_DB_PAT
 - `POST /api/demo/reset`（确认值：`RESET_TRIPTUNE_DEMO`）
 
 ## 在线体验与部署
-访问(https://www.modelscope.cn/studios/ming20260912/triptune?mode=full)，开始规划旅行。
+访问：https://ming20260912-triptune.ms.show ，开始规划旅行。
 自行部署的环境配置、数据备份和密钥管理，详见部署说明。
 
 ## 使用说明与数据范围
