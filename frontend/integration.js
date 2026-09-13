@@ -311,6 +311,7 @@
     const fallback = [...new Set((profileInterests || []).filter(Boolean))];
     const pool = [...new Set([...selected, ...fallback, ...interestLibrary])].slice(0, 20);
     container.innerHTML = "";
+    document.getElementById("moreInterests")?.remove();
     pool.forEach((interest, index) => {
       const active = selected.includes(interest);
       const button = document.createElement("button");
@@ -318,12 +319,31 @@
       button.className = `interest-tag px-3 py-1.5 rounded-lg border text-xs font-medium flex items-center gap-1.5 ${active ? "bg-brand-50 border-brand-200 text-brand-700" : "bg-slate-50 border-slate-200 text-slate-600"}`;
       button.setAttribute("aria-pressed", String(active));
       button.dataset.interest = interest;
+      button.hidden = index >= 8 && !active;
+      button.dataset.extra = String(index >= 8 && !active);
+      if ([...interest].length > 8) button.classList.add("interest-tag-long");
       const icon = document.createElement("span");
       icon.className = "material-symbols-outlined text-[14px]";
       icon.textContent = iconForInterest(interest);
-      button.append(icon, document.createTextNode(interest));
+      icon.setAttribute("aria-hidden", "true");
+      const label = document.createElement("span");
+      label.className = "interest-tag-label";
+      label.textContent = interest;
+      button.append(icon, label);
       container.appendChild(button);
     });
+    if (pool.length > 8) {
+      const more = document.createElement("button");
+      more.id = "moreInterests"; more.type = "button";
+      more.className = "more-interests";
+      more.textContent = "更多兴趣"; more.setAttribute("aria-expanded", "false");
+      more.onclick = () => {
+        const expanded = more.getAttribute("aria-expanded") !== "true";
+        container.querySelectorAll('[data-extra="true"]').forEach(button => { button.hidden = !expanded && button.getAttribute("aria-pressed") !== "true"; });
+        more.setAttribute("aria-expanded", String(expanded)); more.textContent = expanded ? "收起兴趣" : "更多兴趣";
+      };
+      container.after(more);
+    }
     setupInterestTags();
     updateInterestVisualization();
   }
@@ -344,6 +364,7 @@
     refreshPaceStyles();
     state.briefDirty = false;
     renderInterestControls(itinerary.selectedInterests || [], state.profile?.interests || []);
+    ["duration", "partySize"].forEach(id => document.getElementById(id)?.dispatchEvent(new Event("change")));
     updateBriefSummaryPreview();
   }
 
@@ -1287,7 +1308,22 @@
       feedbackBar.append(feedbackPrompt, buttons);
       const placePhoto = createPlaceCover(node);
       if (placePhoto) card.appendChild(placePhoto);
-      card.append(meta, heading, route, feedbackBar);
+      else iconBox.classList.add("scene-icon-fallback");
+      const location = document.createElement("div");
+      location.className = "stop-location";
+      const city = state.itinerary?.destination || "";
+      const address = city === "北京" && node.title === "UCCA 尤伦斯当代艺术中心"
+        ? "北京市朝阳区酒仙桥路4号798艺术区" : "";
+      const addressText = document.createElement("p");
+      addressText.textContent = address || (isEnglish ? "Confirm the exact location in Maps before leaving." : "出发前请在地图中确认具体位置");
+      const mapLink = document.createElement("a");
+      const mapUrl = new URL("https://uri.amap.com/search");
+      mapUrl.search = new URLSearchParams({keyword:node.title || "",city,view:"map",src:"TripTune",callnative:"1"});
+      mapLink.href = mapUrl.href; mapLink.target = "_blank"; mapLink.rel = "noopener noreferrer";
+      mapLink.textContent = isEnglish ? "Find in Amap →" : "在高德地图中查找 →";
+      mapLink.setAttribute("aria-label", `${mapLink.textContent} ${city} ${node.title}`);
+      location.append(addressText,mapLink);
+      card.append(meta, heading, route, location, feedbackBar);
       stream.appendChild(card);
     });
   }
@@ -1656,6 +1692,24 @@
   }
 
   function patchHandlers() {
+    ["duration", "partySize"].forEach(id => {
+      const select = document.getElementById(id);
+      if (!select || document.getElementById(`${id}Stepper`)) return;
+      const stepper = document.createElement("div"); stepper.id = `${id}Stepper`; stepper.className = "trip-stepper";
+      const value = document.createElement("output"); value.setAttribute("aria-live", "polite");
+      const minus = document.createElement("button"); const plus = document.createElement("button");
+      minus.type = plus.type = "button"; minus.textContent = "−"; plus.textContent = "+";
+      const label = id === "duration" ? "天数" : "人数";
+      minus.setAttribute("aria-label", `减少${label}`); plus.setAttribute("aria-label", `增加${label}`);
+      const sync = () => { value.textContent = `${select.value} ${id === "duration" ? "天" : "人"}`; minus.disabled = select.selectedIndex <= 0; plus.disabled = select.selectedIndex >= select.options.length - 1; };
+      const change = delta => { select.selectedIndex = Math.max(0,Math.min(select.options.length-1,select.selectedIndex+delta)); select.dispatchEvent(new Event("change", {bubbles:true})); sync(); };
+      minus.onclick = () => change(-1); plus.onclick = () => change(1);
+      select.addEventListener("change", sync);
+      select.classList.add("stepper-source");
+      select.tabIndex = -1;
+      stepper.append(minus,value,plus); select.after(stepper); sync();
+      new MutationObserver(sync).observe(select,{childList:true,subtree:true,attributes:true});
+    });
     setupPersonalPage();
     setupCoreNavigation();
     setupPlanningExperience();
@@ -1869,7 +1923,8 @@
         const row = document.createElement("button");
         row.className = "saved-trip-open w-full p-5 flex flex-wrap items-center justify-between gap-3 text-left transition";
         const title = document.createElement("strong"); title.textContent = `${trip.destination} · ${trip.durationDays}天`;
-        const meta = document.createElement("span"); meta.className = "text-xs text-slate-500"; meta.textContent = `${new Date(trip.createdAt).toLocaleDateString("zh-CN")} 保存 · 查看旅程 →`;
+        const meta = document.createElement("span"); meta.className = "saved-trip-meta"; meta.textContent = `${new Date(trip.createdAt).toLocaleDateString("zh-CN")} 保存`;
+        row.setAttribute("aria-label", `查看${trip.destination}${trip.durationDays}天旅程`);
         row.append(title, meta);
         row.onclick = async () => {
           row.disabled = true;
@@ -1880,8 +1935,21 @@
         const entry = document.createElement("article");
         entry.className = "saved-trip-entry";
         const cover = createCityCover(trip.destination);
-        if (cover) entry.appendChild(cover);
+        let credits;
+        if (cover) {
+          const caption = cover.querySelector("figcaption");
+          if (caption) {
+            credits = document.createElement("details");
+            credits.className = "saved-trip-credits";
+            const summary = document.createElement("summary"); summary.textContent = "照片来源";
+            const content = document.createElement("div");
+            content.append(...caption.childNodes); caption.remove();
+            credits.append(summary,content);
+          }
+          row.prepend(cover);
+        }
         entry.appendChild(row);
+        if (credits) entry.appendChild(credits);
         list.appendChild(entry);
       }
       if (!trips.length) { const empty = document.createElement("p"); empty.className = "p-5 text-sm text-slate-500"; empty.textContent = "还没有保存的旅程。填写规划旅行，开始第一段旅行。"; list.appendChild(empty); }

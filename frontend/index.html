@@ -889,16 +889,14 @@
 <div class="bg-white p-5 rounded-xl border thin-border shadow-sm space-y-4">
 <div class="flex items-center justify-between">
 <h3 class="text-sm font-semibold text-slate-800" data-i18n="briefBasic">这次怎么出发</h3>
-<span class="material-symbols-outlined text-[18px] text-slate-400">sliders</span>
 </div>
 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4" data-purpose="trip-basics-grid">
 <div>
 <label class="text-xs text-slate-500 block mb-1" data-i18n="briefDest" for="destination">目的地</label>
 <div class="relative">
-<input aria-describedby="destinationHint destinationError" autocomplete="off" class="w-full text-base sm:text-xs font-medium bg-slate-50 border thin-border rounded-lg p-2 text-slate-800 focus:ring-1 focus:ring-brand-500" list="supportedDestinations" maxlength="32" placeholder="输入城市，如北京" required="" type="text" value="">
+<input aria-describedby="destinationError" autocomplete="off" class="w-full text-base sm:text-xs font-medium bg-slate-50 border thin-border rounded-lg p-2 text-slate-800 focus:ring-1 focus:ring-brand-500" list="supportedDestinations" maxlength="32" placeholder="输入城市，如北京" required="" type="text" value="">
 <datalist id="supportedDestinations"></datalist>
 </div>
-<p class="mt-1 text-[10px] text-slate-400" id="destinationHint">支持已配置城市的中文名、英文名或机场三字码</p>
 <p aria-live="polite" class="mt-1 hidden text-[11px] text-red-700" id="destinationError"></p>
 </div>
 <div>
