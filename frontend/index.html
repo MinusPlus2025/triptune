@@ -146,20 +146,20 @@
     #windowShadeGrip { min-height: 2rem; cursor: ns-resize; }
     #planeWindowOuter { width: min(300px, 80vw); height: 350px; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
     #planeWindowOuter > div { padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
-    #windowViewport { border-radius: 0; background: transparent; box-shadow: none; }
+    #windowViewport { --window-aperture: inset(12% 9% 16% round 88px 88px 48px 48px); border-radius: 0; background: transparent; box-shadow: none; }
     #windowViewport::after { content: ''; position: absolute; inset: 12% 9% 16%; border: 8px solid #285763; border-radius: 88px 88px 48px 48px; box-shadow: inset 0 0 0 5px #ebe5d8, inset 0 7px 9px #172f3740, 0 12px 24px #131b2326; pointer-events: none; z-index: 30; }
     #windowViewport::before { content: 'TRIPTUNE'; position:absolute; top:7%; left:0; right:0; text-align:center; font-size:10px; font-weight:600; letter-spacing:3px; color:#47727a; }
     .window-destination { position:absolute; bottom:5%; left:0; right:0; text-align:center; font-size:13px; color:#65878b; letter-spacing:1px; }
     .window-plane { display:none; }
     .window-cloud { height:3rem; width:9rem; filter:blur(12px); opacity:.55; }
     .window-cloud::before,.window-cloud::after { display:none; }
-    #skyDayBg, #skyNightBg { clip-path: inset(12% 9% 16% round 88px 88px 48px 48px); }
+    #skyDayBg, #skyNightBg { clip-path: var(--window-aperture); }
     #windowGlassOverlay { visibility: hidden; }
-    .window-shade-track { position: absolute; inset: 0; z-index: 20; clip-path: inset(12% 9% 16% round 88px 88px 48px 48px); pointer-events: none; }
+    .window-shade-track { position: absolute; inset: 0; z-index: 20; clip-path: var(--window-aperture); pointer-events: none; }
     .window-shade-track::before { content: ''; position: absolute; inset: 0; background: #ada395; opacity: 0; filter: brightness(var(--cabin-frame-light)); pointer-events: none; }
     .window-shade-track.is-sealed::before { opacity: 1; transition: opacity 80ms 440ms; }
     .window-shade-track #windowShade { pointer-events: auto; }
-    #windowShade { height: 100% !important; min-height: 0; border: 0; border-radius: 0; background: linear-gradient(100deg, #bdc9c5, #f1eddf 48%, #cdd8d1); box-shadow: none; overflow: visible; clip-path: inset(0 0 17%); transition: transform 520ms cubic-bezier(.16,1,.3,1); }
+    #windowShade { height: 100% !important; min-height: 0; border: 0; border-radius: 0; background: linear-gradient(100deg, #bdc9c5, #f1eddf 48%, #cdd8d1); box-shadow: none; overflow: visible; clip-path: inset(0 0 14%); transition: transform 520ms cubic-bezier(.16,1,.3,1); }
     #windowShade::after { content:'TT'; position:absolute; top:47%; left:0; right:0; text-align:center; font-size:24px; letter-spacing:-3px; font-weight:600; color:#63817c; pointer-events:none; }
     #windowShadeGrip { position: absolute; bottom: 20%; left: 20%; right: 20%; width: 60%; height: 44px; background: transparent; border: none; }
     #windowShadeGrip > div { opacity: 1; width: 64px; height: 12px; background: #d4dcd3; border-radius: 5px 5px 16px 16px; border-bottom:3px solid #5f7c76; box-shadow: 0 2px 3px #304b4526; }
