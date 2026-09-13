@@ -172,7 +172,7 @@
     }
     #windowShade { min-height: 2.3rem; cursor: ns-resize; touch-action: none; }
     #windowShadeGrip { min-height: 2rem; cursor: ns-resize; }
-    #planeWindowOuter { width: min(300px, 80vw); height: 350px; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
+    #planeWindowOuter { width: min(380px, 86vw); height: clamp(350px, 105vw, 440px); padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
     #planeWindowOuter > div { padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
     #windowViewport { --window-aperture: inset(12% 9% 16% round 88px 88px 48px 48px); border-radius: 0; background: transparent; box-shadow: none; }
     #windowViewport::after { content: ''; position: absolute; inset: 12% 9% 16%; border: 8px solid #285763; border-radius: 88px 88px 48px 48px; box-shadow: inset 0 0 0 5px #ebe5d8, inset 0 7px 9px #172f3740, 0 12px 24px #131b2326; pointer-events: none; z-index: 30; }
@@ -183,6 +183,12 @@
     .window-cloud::before,.window-cloud::after { display:none; }
     #skyDayBg, #skyNightBg { clip-path: var(--window-aperture); }
     #windowGlassOverlay { visibility: hidden; }
+    #skyDayBg { background-image:url('/assets/cloudscape.png') !important; background-size:auto 115% !important; background-position:40% 50%; animation:sky-pan 36s ease-in-out infinite alternate; }
+    #skyDayBg > div,#skyDayBg .window-cloud { display:none; }
+    #skyNightBg { background-image:linear-gradient(#06192ac9,#102538b8),url('/assets/cloudscape.png') !important; background-size:auto 115% !important; animation:sky-pan 45s ease-in-out infinite alternate; }
+    #windowViewport[data-weather="cloud"] #skyDayBg { filter:saturate(.6) brightness(.9); }
+    #windowViewport[data-weather="rain"] #skyDayBg { background-image:linear-gradient(#526c8399,#75889666),url('/assets/cloudscape.png') !important; }
+    @keyframes sky-pan { from{background-position:25% 50%} to{background-position:75% 50%} }
     #windowWeatherBadge { position:absolute; z-index:12; top:33%; left:22%; right:22%; display:flex; flex-direction:column; align-items:center; color:#123f49; text-shadow:0 1px 5px #ffffffb3; font-size:13px; pointer-events:none; }
     #windowWeatherBadge > .material-symbols-outlined { font-size:36px; }
     #windowWeatherBadge strong { font-size:44px; font-weight:500; line-height:1.2; }
@@ -881,7 +887,7 @@
 <!-- Basic Parameters -->
 <div class="bg-white p-5 rounded-xl border thin-border shadow-sm space-y-4">
 <div class="flex items-center justify-between">
-<h3 class="text-sm font-semibold text-slate-800" data-i18n="briefBasic">基本参数</h3>
+<h3 class="text-sm font-semibold text-slate-800" data-i18n="briefBasic">这次怎么出发</h3>
 <span class="material-symbols-outlined text-[18px] text-slate-400">sliders</span>
 </div>
 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4" data-purpose="trip-basics-grid">
