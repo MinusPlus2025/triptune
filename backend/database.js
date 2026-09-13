@@ -354,9 +354,9 @@ export function updateProfile(profileId, input) {
   try {
     db.prepare(`
       UPDATE profiles
-      SET name = ?, default_budget_cents = ?, default_pace = ?
+      SET name = ?, default_budget_cents = ?, default_pace = ?, avatar = ?
       WHERE id = ?
-    `).run(name, Math.round(budget * 100), pace, profileId);
+    `).run(name, Math.round(budget * 100), pace, input.avatar === undefined ? existing.avatar : input.avatar, profileId);
     db.prepare("DELETE FROM profile_interests WHERE profile_id = ?").run(profileId);
     const insertInterest = db.prepare(`
       INSERT INTO profile_interests (profile_id, interest, base_weight, position)

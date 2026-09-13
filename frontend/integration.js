@@ -543,7 +543,7 @@
     if (!profile) return;
     state.profile = profile;
     setText("#travelerNameDisplay", profile.name);
-    setText("#travelerAvatar", profile.avatar);
+    renderAvatar(document.getElementById("travelerAvatar"), profile.avatar, profile.name);
     setText(".traveler-dynamic-name", profile.name);
     setText("#tuningSummaryText", profile.signals || `旅行偏好：${(profile.interests || []).slice(0, 3).join(" / ")}`);
     setText("#briefTagCount", `${profile.interests?.length || 0} TAGS AVAILABLE`);
@@ -556,10 +556,46 @@
     renderBoardingWindow();
   }
 
+  let pendingAvatar;
+  function renderAvatar(node, avatar, name) {
+    if (!node) return;
+    node.replaceChildren();
+    if (/^data:image\/jpeg;base64,/.test(avatar || "")) {
+      const img = document.createElement("img");
+      img.src = avatar; img.alt = `${name || "用户"}的头像`;
+      img.style.cssText = "width:100%;height:100%;object-fit:cover;border-radius:50%";
+      node.append(img);
+    } else node.textContent = (name || "我").slice(0, 1);
+  }
+  async function chooseProfileAvatar(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const error = document.getElementById("profileEditorError");
+    const save = document.getElementById("saveProfileEditor");
+    save.disabled = true;
+    let bitmap;
+    try {
+      if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024) throw new Error("请选择不超过 5 MB 的 JPG、PNG 或 WebP 图片。");
+      bitmap = await createImageBitmap(file);
+      const canvas = document.createElement("canvas"); canvas.width = canvas.height = 160;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, 160, 160);
+      const side = Math.min(bitmap.width, bitmap.height);
+      ctx.drawImage(bitmap, (bitmap.width-side)/2, (bitmap.height-side)/2, side, side, 0, 0, 160, 160);
+      pendingAvatar = canvas.toDataURL("image/jpeg", 0.75);
+      if (pendingAvatar.length > 48000) throw new Error("图片压缩失败，请换一张图片。");
+      renderAvatar(document.getElementById("profileAvatarPreview"), pendingAvatar, state.profile.name);
+      error.classList.add("hidden");
+    } catch (failure) { error.textContent = failure.message; error.classList.remove("hidden"); }
+    finally { bitmap?.close(); save.disabled = false; event.target.value = ""; }
+  }
   function openProfileEditor() {
     const dialog = document.getElementById("profileEditor");
     if (!dialog || !state.profile) return;
     if (dialog.open) return;
+    pendingAvatar = undefined;
+    document.getElementById("profileAvatarFile").value = "";
+    renderAvatar(document.getElementById("profileAvatarPreview"), state.profile.avatar, state.profile.name);
     document.getElementById("profileName").value = state.profile.name || "";
     document.getElementById("profileBudget").value = state.profile.budget || 5000;
     document.getElementById("profilePace").value = state.profile.pace || "balanced";
@@ -653,6 +689,7 @@
       .slice(0, 12);
     const payload = {
       name: document.getElementById("profileName").value.trim(),
+      avatar: pendingAvatar,
       budget: safeNumber(document.getElementById("profileBudget").value, 0),
       pace: document.getElementById("profilePace").value,
       interests
@@ -1499,6 +1536,11 @@
     document.getElementById("cancelProfileEditor")?.addEventListener("click", closeProfileEditor);
     document.getElementById("switchProfileTraveler")?.addEventListener("click", toggleTravelerFromApi);
     document.getElementById("profileEditorForm")?.addEventListener("submit", saveProfile);
+    document.getElementById("profileAvatarFile")?.addEventListener("change", chooseProfileAvatar);
+    document.getElementById("removeProfileAvatar")?.addEventListener("click", () => {
+      pendingAvatar = "";
+      renderAvatar(document.getElementById("profileAvatarPreview"), "", document.getElementById("profileName").value);
+    });
     document.getElementById("profileEditor")?.addEventListener("cancel", (event) => {
       event.preventDefault();
       closeProfileEditor();
@@ -1597,7 +1639,7 @@
     page.innerHTML = `
       <header><h2 class="text-2xl font-bold text-slate-900">我的旅行</h2><p class="mt-2 text-sm text-slate-600">管理你的偏好，也随时接着上一次的旅程出发。</p></header>
       <div class="bg-white rounded-xl border thin-border p-5 sm:p-6 flex flex-wrap items-center justify-between gap-4">
-        <div><h3 id="personalName" class="text-xl font-semibold text-brand-800">正在读取资料…</h3><p class="mt-2 text-xs text-slate-500">共享体验档案，请勿填写个人隐私</p></div>
+        <div><div id="personalAvatar" style="width:64px;height:64px;border-radius:50%;overflow:hidden;background:#e5eff0;display:grid;place-items:center;margin-bottom:12px"></div><h3 id="personalName" class="text-xl font-semibold text-brand-800">正在读取资料…</h3><p class="mt-2 text-xs text-slate-500">共享体验档案，请勿填写个人隐私</p></div>
         <button id="personalEdit" class="px-4 py-2.5 rounded-lg bg-brand-700 text-white text-sm font-semibold">编辑资料与偏好</button>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1622,6 +1664,7 @@
       if (profileId !== state.profileId) return;
       state.profile = profile;
       setText("#personalName", profile.name);
+      renderAvatar(document.getElementById("personalAvatar"), profile.avatar, profile.name);
       setText("#personalBudget", `¥${Number(profile.budget).toLocaleString("zh-CN")}`);
       setText("#personalPace", ({relaxed:"慢慢逛，留足休息时间", balanced:"有重点，也有自由时间", dense:"尽量多看，少走回头路"})[profile.pace]);
       const interests = document.getElementById("personalInterests");

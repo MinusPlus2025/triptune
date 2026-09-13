@@ -65,12 +65,14 @@ test("traveler profile edits persist and become recommendation inputs", () => {
   const before = data.getProfile("demo-linmo");
   const updated = data.updateProfile("demo-linmo", {
     name: "林默测试",
+    avatar: "data:image/jpeg;base64,/9j/2Q==",
     budget: 6800,
     pace: "dense",
     interests: ["当代建筑", "自然徒步", "地方早餐"]
   });
 
   assert.equal(updated.name, "林默测试");
+  assert.equal(data.getProfile("demo-linmo").avatar, "data:image/jpeg;base64,/9j/2Q==");
   assert.equal(updated.budget, 6800);
   assert.equal(updated.pace, "dense");
   assert.deepEqual(updated.interests, ["当代建筑", "自然徒步", "地方早餐"]);

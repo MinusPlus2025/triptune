@@ -177,7 +177,9 @@ async function api(req, res, pathname) {
     if (!getProfile(profileId)) return apiError(res, 404, "profile_not_found", "找不到该旅人。", "profileId");
     const input = await parseBody(req);
     const name = cleanText(input.name, 24);
-    if (name.length < 2) return apiError(res, 422, "validation_error", "称呼至少需要 2 个字符。", "name");
+    if (!name) return apiError(res, 422, "validation_error", "请填写昵称。", "name");
+    const avatar = input.avatar;
+    if (avatar !== undefined && (typeof avatar !== "string" || avatar.length > 48000 || (avatar !== "" && !/^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/.test(avatar)))) return apiError(res, 422, "validation_error", "头像格式不正确，请重新选择图片。", "avatar");
     const budget = Number(input.budget);
     if (!Number.isFinite(budget) || budget < 500 || budget > 100000) return apiError(res, 422, "validation_error", "常用预算须在 ¥500–¥100,000 之间。", "budget");
     const pace = allowedPaces.has(input.pace) ? input.pace : null;
@@ -186,7 +188,7 @@ async function api(req, res, pathname) {
       ? [...new Set(input.interests.map((interest) => cleanText(interest, 24)).filter(Boolean))].slice(0, 12)
       : [];
     if (!interests.length) return apiError(res, 422, "validation_error", "请至少保留一个旅行兴趣。", "interests");
-    return json(res, 200, updateProfile(profileId, { name, budget: Math.round(budget), pace, interests }));
+    return json(res, 200, updateProfile(profileId, { name, avatar, budget: Math.round(budget), pace, interests }));
   }
 
   const itineraryMatch = pathname.match(/^\/api\/itineraries\/([^/]+)$/);
