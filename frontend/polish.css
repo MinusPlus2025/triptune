@@ -231,7 +231,8 @@ button:disabled { cursor: wait; opacity: .6; }
   display: none !important;
 }
 .planning-chat { margin:24px 0 32px;padding:20px 0;border-bottom:1px solid #cad6cf;color:#234944; }
-.planning-chat h3 { font-size:24px;margin:0 0 12px; }
+.planning-chat h3 { font-family:'TripTune Heading','Kaiti SC',serif;font-size:clamp(28px,4vw,36px);font-weight:400;line-height:1.4;margin:0 0 12px; }
+.planning-heading-accent { display:inline-block;width:26px;height:26px;margin-left:10px;vertical-align:middle;color:#b86643; }
 .planning-chat label { display:block;margin-bottom:10px;font-size:14px; }
 .planning-chat textarea { display:block;box-sizing:border-box;width:100%;padding:16px;border:1px solid #829d93;border-radius:12px;background:#fffdf7;color:#234944;font:inherit;resize:vertical; }
 .planning-chat button { padding:12px 20px;min-height:44px;border-radius:24px;background:#234944;color:#fffdf7;margin-top:12px; }

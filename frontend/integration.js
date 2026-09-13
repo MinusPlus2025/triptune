@@ -411,9 +411,13 @@
     snapshotTemp.textContent = "28.5℃";
     const snapshotCity = document.createElement("span");
     snapshotCity.textContent = "北京 · 9月13日";
-    const snapshotTime = document.createElement("small");
-    snapshotTime.textContent = "12:00 数据 · 手动更新";
-    snapshotBadge.append(snapshotTemp, snapshotCity, snapshotTime);
+    const sun = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    sun.setAttribute("viewBox", "0 0 32 32");
+    sun.setAttribute("width", "32"); sun.setAttribute("height", "32");
+    sun.setAttribute("role", "img"); sun.setAttribute("aria-label", "晴朗");
+    sun.style.color = "#b77616";
+    sun.innerHTML = '<circle cx="16" cy="16" r="6" fill="#efbb51"/><path d="M16 2v4m0 20v4M2 16h4m20 0h4M6 6l3 3m14 14 3 3M6 26l3-3M23 9l3-3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>';
+    snapshotBadge.append(sun, snapshotTemp, snapshotCity);
     snapshotBadge.title = "中国气象局天气预报页面截图 · 2026年9月13日12:00 · 非实时数据";
     return;
     // The home-window weather location is Beijing for this presentation.
@@ -521,6 +525,8 @@
     if (!viewport || !daySky || !shade || !overlay) return;
     const destinationLabel = document.createElement("div");
     destinationLabel.id = "windowDestinationLabel";
+    destinationLabel.hidden = true;
+    destinationLabel.style.display = "none";
     destinationLabel.className = "window-destination";
     viewport.appendChild(destinationLabel);
 
@@ -1874,6 +1880,18 @@
     section.id = "planningChat";
     section.className = "planning-chat";
     section.innerHTML = `<h3>说说你想怎么旅行</h3><label for="planningMessage">目的地、天数、同行人数，以及想做的事</label><textarea id="planningMessage" rows="3" maxlength="2000" placeholder="比如：去北京三天，两个人，想逛书店和美术馆，每天慢慢逛。"></textarea><p class="planning-privacy">发送的文字将由魔搭模型处理，不会附带你的个人资料或旅行回忆。当前支持六座城市、1—7天行程。</p><button type="button" id="planningSend">帮我整理安排</button><div id="planningReply" role="status" aria-live="polite"></div><button type="button" id="planningConfirm" hidden>确认并生成行程</button>`;
+    const aiNote = document.createElement("p");
+    section.querySelector("h3").textContent = "这次你有什么想法？";
+    const headingAccent = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    headingAccent.setAttribute("viewBox", "0 0 32 32");
+    headingAccent.setAttribute("aria-hidden", "true");
+    headingAccent.setAttribute("focusable", "false");
+    headingAccent.classList.add("planning-heading-accent");
+    headingAccent.innerHTML = '<circle cx="16" cy="16" r="12" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="m21 10-3 9-7 3 3-9Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>';
+    section.querySelector("h3").appendChild(headingAccent);
+    aiNote.className = "planning-privacy";
+    aiNote.textContent = "AI 帮你整理想法，偶尔也会会错意。出发你做主，确认前记得看一眼。";
+    section.querySelector("#planningSend").before(aiNote);
     page.children[0].after(section);
     const input = section.querySelector("textarea");
     const send = section.querySelector("#planningSend");
