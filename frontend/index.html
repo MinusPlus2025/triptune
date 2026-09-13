@@ -67,6 +67,17 @@
     .z-15 { z-index: 15; }
     button, [role="button"] { user-select: none; }
     button:disabled { cursor: not-allowed; opacity: 0.48; }
+    .interest-tag { min-height:44px; }
+    .interest-tag::after { content:''; width:14px; height:14px; flex-shrink:0; border:1px solid #8b9f9f; border-radius:50%; }
+    .interest-tag[aria-pressed="true"], .incident-btn[aria-pressed="true"], label:has(input[name="pace"]:checked) { background:#164e5b !important; border-color:#164e5b !important; color:#fff !important; box-shadow:0 2px 6px #123f491a !important; }
+    .interest-tag[aria-pressed="true"]::after { border:0; border-radius:0; background:#fff; clip-path:polygon(0 45%,18% 30%,42% 58%,83% 8%,100% 22%,43% 94%); }
+    .incident-btn { position:relative; padding-right:32px !important; }
+    .incident-btn[aria-pressed="true"]::after { content:''; position:absolute; right:12px; top:16px; width:15px; height:15px; background:white; clip-path:polygon(0 45%,18% 30%,42% 58%,83% 8%,100% 22%,43% 94%); }
+    .incident-btn[aria-pressed="true"] *, label:has(input[name="pace"]:checked) * { color:#fff !important; }
+    label:has(input[name="pace"]) { position:relative; padding-right:34px !important; }
+    label:has(input[name="pace"])::after { content:''; position:absolute; right:12px; top:16px; width:16px; height:16px; border:1px solid #819b9e; border-radius:50%; }
+    label:has(input[name="pace"]:checked)::after { background:#fff; border:4px solid #164e5b; outline:2px solid #fff; }
+    .interest-tag:focus-visible,.incident-btn:focus-visible,label:has(input[name="pace"]:focus-visible) { outline:3px solid #318697; outline-offset:3px; }
     .editable-surface { cursor: pointer; }
     .editable-surface:hover { border-color: #bfd9e4; box-shadow: 0 8px 24px rgba(15, 61, 76, 0.08); }
     #windowViewport { touch-action: none; }
