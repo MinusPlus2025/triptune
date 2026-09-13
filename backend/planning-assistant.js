@@ -43,10 +43,18 @@ export async function proposeTrip(message) {
         {role:'user',content:message}
       ]})
     });
-    if (!response.ok) throw new Error('ai_unavailable');
+    if (!response.ok) {
+      console.warn('[planning]', 'provider_http', response.status);
+      throw new Error('ai_unavailable');
+    }
     const data=await response.json();
     const text=data.choices?.[0]?.message?.content;
     if (typeof text!=='string') throw new Error('invalid_proposal');
     return {proposal:validateProposal(JSON.parse(text.replace(/^```(?:json)?\s*/,'').replace(/\s*```$/,''))),model:'Qwen/Qwen3-VL-8B-Instruct'};
+  } catch (error) {
+    const name = ['TimeoutError','TypeError','SyntaxError','Error'].includes(error.name) ? error.name : 'other';
+    const code = /^[A-Z_]{2,50}$/.test(error.cause?.code || '') ? error.cause.code : 'none';
+    console.warn('[planning]', name, 'network_code', code);
+    throw error;
   } finally { active--; }
 }
