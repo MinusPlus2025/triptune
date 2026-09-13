@@ -1,13 +1,29 @@
 const positions = {北京:[39.9042,116.4074],上海:[31.2304,121.4737],杭州:[30.2741,120.1551],成都:[30.5728,104.0668],广州:[23.1291,113.2644],南京:[32.0603,118.7969]};
+import https from "node:https";
 const cache = new Map();
+function fetchAmap(url) {
+  return new Promise((resolve,reject) => {
+    const request = https.get(url,{family:4},response => {
+      let body = "";
+      response.setEncoding("utf8");
+      response.on("data",chunk => { body += chunk; if (body.length>65536) request.destroy(new Error("Response too large")); });
+      response.on("error",reject);
+      response.on("end",()=> {
+        if (response.statusCode!==200) return reject(new Error(`AMAP_HTTP_${response.statusCode}`));
+        try { resolve(JSON.parse(body)); } catch { reject(new Error("AMAP_DATA_INVALID")); }
+      });
+    });
+    const timer = setTimeout(()=>request.destroy(Object.assign(new Error("Timeout"),{name:"TimeoutError"})),6000);
+    request.on("close",()=>clearTimeout(timer));
+    request.on("error",reject);
+  });
+}
 const pending = new Map();
 const adcodes = {北京:"110000",上海:"310000",杭州:"330100",成都:"510100",广州:"440100",南京:"320100"};
 async function getAmapWeather(city) {
   const url = new URL("https://restapi.amap.com/v3/weather/weatherInfo");
   url.search = new URLSearchParams({key:process.env.AMAP_API_KEY.trim(),city:adcodes[city],extensions:"base",output:"JSON"});
-  const response = await fetch(url, {signal:AbortSignal.timeout(6000)});
-  if (!response.ok) throw new Error(`AMAP_HTTP_${response.status}`);
-  const data = await response.json();
+  const data = await fetchAmap(url);
   if (data.status !== "1") {
     const code = /^\d{5}$/.test(data.infocode) ? data.infocode : "unknown";
     throw new Error(`AMAP_API_${code}`);
