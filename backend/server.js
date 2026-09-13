@@ -1,4 +1,5 @@
 import http from "node:http";
+import { proposeTrip } from "./planning-assistant.js";
 import { getWeather } from "./weather.js";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
@@ -21,6 +22,7 @@ import {
   listPlaces,
   listProfiles,
   listItineraries,
+  manageItinerary,
   resetLiveDemoData,
   saveItinerary,
   saveReplan,
@@ -135,6 +137,14 @@ function ensureLatestItinerary(profileId) {
 }
 
 async function api(req, res, pathname) {
+  if (req.method === "POST" && pathname === "/api/planning/interpret") {
+    const body = await parseBody(req);
+    try { return json(res, 200, await proposeTrip(body.message)); }
+    catch (error) {
+      const messages = {invalid_message:"请用2000字以内描述旅行想法。",ai_not_configured:"对话服务尚未配置，请稍后重试。",ai_limit:"当前对话较多，请稍后再试。"};
+      return apiError(res, error.message === "invalid_message" ? 422 : 503, "planning_unavailable", messages[error.message] || "暂时没能整理好，请重试或手动填写。");
+    }
+  }
   if (req.method === "GET" && pathname.startsWith("/api/weather/")) {
     try { return json(res, 200, await getWeather(decodeURIComponent(pathname.slice(13)))); }
     catch { return apiError(res, 503, "weather_unavailable", "天气暂未更新，请稍后重试。"); }
@@ -197,6 +207,14 @@ async function api(req, res, pathname) {
   }
 
   const itineraryMatch = pathname.match(/^\/api\/itineraries\/([^/]+)$/);
+  if (req.method === "POST" && itineraryMatch) {
+    const input = await parseBody(req);
+    const name = cleanText(input.name,60);
+    if (!["rename","delete","restore"].includes(input.action) || (input.action === "rename" && !name)) return apiError(res,400,"invalid_action","请填写旅程名称");
+    // Shared demo profile ownership check, not private-account authentication.
+    return manageItinerary(itineraryMatch[1],cleanText(input.profileId,48),input.action,name)
+      ? json(res,200,{ok:true}) : apiError(res,404,"not_found","找不到旅程");
+  }
   if (req.method === "GET" && itineraryMatch) {
     const identifier = itineraryMatch[1];
     const itinerary = identifier.startsWith("trip-") ? getItineraryById(identifier) : ensureLatestItinerary(identifier);

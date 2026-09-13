@@ -705,7 +705,7 @@
 <button class="nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-bold text-brand-700 bg-brand-50 border border-brand-200 shadow-sm" data-nav="01" onclick="switchView('01')">
 <div class="flex items-center gap-2.5">
 <span class="material-symbols-outlined text-[17px]">tune</span>
-<span data-i18n="navBrief" class="">规划旅行</span>
+<span data-i18n="navBrief" class="">规划旅程</span>
 </div>
 <span class="text-[10px] font-mono text-slate-400">01</span>
 </button>
@@ -860,7 +860,7 @@
 <div class="w-full mt-6 space-y-3">
 <button class="w-full py-3.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-sm font-semibold transition shadow-md hover:shadow-lg flex items-center justify-center gap-2 group" data-purpose="swipe-boarding-btn" onclick="enterBoarding()">
 <span class="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
-<span data-i18n="enterBriefBtn" class="">开始规划旅行</span>
+<span data-i18n="enterBriefBtn" class="">开始规划旅程</span>
 </button>
 <div class="text-center">
 <button class="text-xs text-slate-400 hover:text-slate-600 underline font-medium" data-i18n="skipSwipe" onclick="enterBoarding()">已有想法？直接填写旅行偏好</button>
@@ -877,7 +877,7 @@
 <section class="hidden max-w-5xl mx-auto space-y-6" id="view-01">
 <div class="flex items-center justify-between pb-4 border-b thin-border">
 <div>
-<h2 class="text-xl font-bold text-slate-900" data-i18n="briefHeader">规划旅行</h2>
+<h2 class="text-xl font-bold text-slate-900" data-i18n="briefHeader">规划旅程</h2>
 <p class="text-xs text-slate-500 mt-0.5" data-i18n="briefSub">告诉我们你的兴趣、节奏与预算，生成真正适合你的旅程</p>
 </div>
 <span class="text-xs font-mono text-brand-600 bg-brand-50 px-2.5 py-1 rounded-md border border-brand-100">STAGE 01 / BRIEF</span>
@@ -1371,7 +1371,7 @@
 <!-- Left 2 Cols: Recap Highlights & Physical Tactile Keepsake Badges -->
 <div class="lg:col-span-2 space-y-6" data-purpose="keepsake-primary">
 <!-- Physical Keepsake Badges Section (Vintage Stamp, Vinyl Disc, Stub) -->
-<div class="bg-white p-5 rounded-xl border thin-border shadow-sm space-y-4">
+<div hidden style="display:none" aria-hidden="true" class="bg-white p-5 rounded-xl border thin-border shadow-sm space-y-4">
 <div class="flex items-center justify-between" data-purpose="keepsake-section-header">
 <h3 class="text-sm font-semibold text-slate-800">实体数字纪念章 (Digital Keepsake Artifacts)</h3>
 <span class="text-[10px] font-mono text-slate-400">3 ARTIFACTS MINTED</span>
@@ -1411,12 +1411,13 @@
 </div>
 <!-- Highlight Moments with Photo Cards -->
 <div class="bg-white p-5 rounded-xl border thin-border shadow-sm space-y-3">
-<h3 class="text-sm font-semibold text-slate-800" data-i18n="recapTitle">本程高光时刻</h3>
+<h3 class="text-sm font-semibold text-slate-800" data-i18n="recapTitle">这次想去的地方</h3>
+<p class="text-xs text-slate-500">来自当天行程的前两项安排，不代表实际到访记录。</p>
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
 <div class="rounded-xl border thin-border overflow-hidden group">
 <div class="h-28 overflow-hidden relative">
 <div aria-hidden="true" class="w-full h-full bg-gradient-to-br from-brand-100 to-slate-200 flex items-center justify-center"><span class="material-symbols-outlined text-4xl text-brand-600">location_city</span></div>
-<span class="absolute top-2 left-2 text-[9px] font-mono text-white bg-brand-700/90 px-1.5 py-0.5 rounded">空间高光</span>
+<span class="absolute top-2 left-2 text-[9px] font-mono text-white bg-brand-700/90 px-1.5 py-0.5 rounded">计划前往</span>
 </div>
 <div class="p-3 bg-white">
 <div class="text-xs font-bold text-slate-800" data-i18n="recapHigh1Title">等待本次旅程生成</div>
@@ -1426,7 +1427,7 @@
 <div class="rounded-xl border thin-border overflow-hidden group">
 <div class="h-28 overflow-hidden relative">
 <div aria-hidden="true" class="w-full h-full bg-gradient-to-br from-indigo-100 to-brand-100 flex items-center justify-center"><span class="material-symbols-outlined text-4xl text-indigo-700">auto_awesome</span></div>
-<span class="absolute top-2 left-2 text-[9px] font-mono text-white bg-indigo-700/90 px-1.5 py-0.5 rounded">旋律印记</span>
+<span class="absolute top-2 left-2 text-[9px] font-mono text-white bg-indigo-700/90 px-1.5 py-0.5 rounded">计划前往</span>
 </div>
 <div class="p-3 bg-white">
 <div class="text-xs font-bold text-slate-800" data-i18n="recapHigh2Title">等待本次旅程生成</div>
@@ -1535,7 +1536,7 @@
 <div>
 <label class="block text-xs font-semibold text-slate-700 mb-1.5" for="profileInterests">长期兴趣</label>
 <textarea class="w-full min-h-24 rounded-lg border thin-border bg-slate-50 px-3 py-2.5 text-sm leading-relaxed" id="profileInterests" maxlength="260" placeholder="用逗号分隔，例如：建筑、早市、书店"></textarea>
-<p class="mt-1.5 text-[11px] text-slate-500">最多 12 项；也可以在规划旅行里为某一次旅程临时添加。</p>
+<p class="mt-1.5 text-[11px] text-slate-500">最多 12 项；也可以在规划旅程里为某一次旅程临时添加。</p>
 </div>
 <p aria-live="polite" class="hidden rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700" id="profileEditorError"></p>
 <button class="text-left text-xs font-semibold text-brand-700 hover:underline" id="switchProfileTraveler" type="button">切换到另一位体验档案</button>
@@ -1580,12 +1581,12 @@
   /**
    * Pure Bilingual Dictionary
    * Strictly pure Chinese for 'zh' and strictly pure English for 'en'.
-   * Never combine them into hybrid strings like "规划旅行 (Departure Brief)".
+   * Never combine them into hybrid strings like "规划旅程 (Departure Brief)".
    */
   const i18n = {
     zh: {
       activeTraveler: "当前档案",
-      navBrief: "规划旅行",
+      navBrief: "规划旅程",
       navOverview: "旅程导览",
       navRoam: "今日漫游",
       navReroute: "途中改线",
@@ -1597,7 +1598,7 @@
       flightSpeed: "行程状态：准备生成",
       flightTime: "本地时间：正在同步",
       tab00: "登机入口",
-      tab01: "规划旅行",
+      tab01: "规划旅程",
       tab02: "旅程导览",
       tab03: "今日漫游",
       tab04: "途中改线",
@@ -1616,7 +1617,7 @@
       passSeat: "座位 / 登机门",
       enterBriefBtn: "开始规划旅程",
       skipSwipe: "已有想法？直接填写旅行偏好",
-      briefHeader: "规划旅行",
+      briefHeader: "规划旅程",
       briefSub: "告诉我们你的兴趣、节奏与预算，生成真正适合你的旅程",
       briefBasic: "这次怎么出发",
       briefDest: "目的地",
@@ -1703,7 +1704,7 @@
       btnAcceptReroute: "接受新路线并同步至日程",
       keepsakeHeader: "旅程档案与留存",
       keepsakeSub: "保存你的选择与反馈，让下一次旅程更适合你",
-      recapTitle: "本程高光时刻",
+      recapTitle: "这次想去的地方",
       recapHigh1Title: "等待本次旅程生成",
       recapHigh1Desc: "生成旅程后，这里会显示本次路线高光。",
       recapHigh2Title: "等待本次旅程生成",
@@ -1717,7 +1718,7 @@
       feedbackTitle: "最近的旅行反馈",
       nextMemory: "下一次推荐预设",
       nextMemoryVal: "下一次旅程将继续使用本次反馈",
-      btnExportArchive: "导出行程",
+      btnExportArchive: "保存行程图片",
       demoNotice: "共享体验版 · 请勿填写隐私信息",
       toastPlanGenerated: "已根据你的旅行偏好生成旅程。",
       toastRerouted: "新路线已同步至今日漫游。",
@@ -1844,7 +1845,7 @@
       btnAcceptReroute: "Accept & Sync Itinerary",
       keepsakeHeader: "Memory Keepsake",
       keepsakeSub: "Saved choices and feedback for your next trip",
-      recapTitle: "Key Voyage Highlights",
+      recapTitle: "Places in your plan",
       recapHigh1Title: "Awaiting itinerary",
       recapHigh1Desc: "Your generated route highlights will appear here.",
       recapHigh2Title: "Awaiting itinerary",
@@ -1858,7 +1859,7 @@
       feedbackTitle: "Recent Interactive Feedback",
       nextMemory: "Upcoming Seed Memory",
       nextMemoryVal: "Your next trip will use this feedback",
-      btnExportArchive: "Export itinerary",
+      btnExportArchive: "Save itinerary as PNG",
       demoNotice: "Live generation · SQLite connected",
       toastPlanGenerated: "Custom itinerary generated and calibrated!",
       toastRerouted: "Itinerary re-tuned and pushed to mobile.",

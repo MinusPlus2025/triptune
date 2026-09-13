@@ -20,7 +20,7 @@ test("all six cities have distinct local JPEG covers and attribution", () => {
 test("city cover binds the selected city and collapses on image failure", () => {
   const source = readFileSync(new URL("../frontend/integration.js", import.meta.url), "utf8");
   const fn = source.slice(source.indexOf("  function createCityCover("), source.indexOf("  function renderOverview("));
-  const document = { createElement: tag => ({ tag, children: [], append(...items) { this.children.push(...items); }, remove() { this.removed = true; } }) };
+  const document = { getElementById: () => null, createElement: tag => ({ tag, children: [], append(...items) { this.children.push(...items); }, remove() { this.removed = true; } }) };
   const create = vm.runInNewContext(`${fn}; createCityCover`, { ...context, document });
   for (const city of Object.keys(photos)) {
     const figure = create(city);

@@ -214,6 +214,9 @@ function initializeSchema() {
     );
   `);
   const replanColumns = db.prepare("PRAGMA table_info(replans)").all().map(({ name }) => name);
+  const itineraryColumns = db.prepare("PRAGMA table_info(itineraries)").all().map(({name})=>name);
+  if (!itineraryColumns.includes("display_name")) db.exec("ALTER TABLE itineraries ADD COLUMN display_name TEXT");
+  if (!itineraryColumns.includes("deleted_at")) db.exec("ALTER TABLE itineraries ADD COLUMN deleted_at TEXT");
   if (!replanColumns.includes("original_title")) {
     db.exec("ALTER TABLE replans ADD COLUMN original_title TEXT NOT NULL DEFAULT ''");
   }
@@ -451,15 +454,23 @@ export function saveItinerary(requestId, input, plan) {
 }
 
 export function getLatestItinerary(profileId) {
-  const row = db.prepare("SELECT id FROM itineraries WHERE profile_id = ? ORDER BY created_at DESC, rowid DESC LIMIT 1").get(profileId);
+  const row = db.prepare("SELECT id FROM itineraries WHERE profile_id = ? AND deleted_at IS NULL ORDER BY created_at DESC, rowid DESC LIMIT 1").get(profileId);
   return row ? getItineraryById(row.id) : null;
 }
 
 export function listItineraries(profileId) {
-  return db.prepare(`SELECT i.id, i.destination, i.created_at AS createdAt,
+  return db.prepare(`SELECT i.id, i.destination, i.display_name AS displayName, i.created_at AS createdAt,
     r.duration_days AS durationDays, r.budget_cents / 100.0 AS budget
     FROM itineraries i JOIN trip_requests r ON r.id = i.request_id
-    WHERE i.profile_id = ? ORDER BY i.created_at DESC, i.rowid DESC LIMIT 100`).all(profileId);
+    WHERE i.profile_id = ? AND i.deleted_at IS NULL ORDER BY i.created_at DESC, i.rowid DESC LIMIT 100`).all(profileId);
+}
+
+export function manageItinerary(id, profileId, action, name) {
+  const trip = db.prepare("SELECT id FROM itineraries WHERE id=? AND profile_id=?").get(id,profileId);
+  if (!trip) return false;
+  if (action === "rename") db.prepare("UPDATE itineraries SET display_name=? WHERE id=?").run(name,id);
+  else db.prepare("UPDATE itineraries SET deleted_at=? WHERE id=?").run(action === "restore" ? null : now(),id);
+  return true;
 }
 
 export function getItineraryById(itineraryId) {

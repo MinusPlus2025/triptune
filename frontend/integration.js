@@ -157,7 +157,8 @@
       button.onclick = () => { destination.value = city; destination.dispatchEvent(new Event("input", {bubbles:true})); destination.dispatchEvent(new Event("change", {bubbles:true})); };
       const credit = document.createElement("a"); credit.href = photo.source; credit.target = "_blank"; credit.rel = "noopener";
       credit.textContent = `${photo.author} · ${photo.license}`;
-      figure.append(button, credit); gallery.appendChild(figure);
+      registerPhotoCredit(photo, city);
+      figure.append(button); gallery.appendChild(figure);
     });
     page.children[0].after(gallery);
     const summary = document.createElement("div");
@@ -395,6 +396,26 @@
   let windowWeatherFetched = 0;
   let windowWeatherSequence = 0;
   async function refreshWindowWeather() {
+    // Manually supplied CMA screenshot, not a live observation or API fallback.
+    const snapshotViewport = document.getElementById("windowViewport");
+    if (!snapshotViewport) return;
+    let snapshotBadge = document.getElementById("windowWeatherBadge");
+    if (!snapshotBadge) {
+      snapshotBadge = document.createElement("div");
+      snapshotBadge.id = "windowWeatherBadge";
+      snapshotViewport.appendChild(snapshotBadge);
+    }
+    snapshotViewport.dataset.weather = "unknown";
+    snapshotBadge.replaceChildren();
+    const snapshotTemp = document.createElement("strong");
+    snapshotTemp.textContent = "28.5℃";
+    const snapshotCity = document.createElement("span");
+    snapshotCity.textContent = "北京 · 9月13日";
+    const snapshotTime = document.createElement("small");
+    snapshotTime.textContent = "12:00 数据 · 手动更新";
+    snapshotBadge.append(snapshotTemp, snapshotCity, snapshotTime);
+    snapshotBadge.title = "中国气象局天气预报页面截图 · 2026年9月13日12:00 · 非实时数据";
+    return;
     // The home-window weather location is Beijing for this presentation.
     // Keep the query and label together; never relabel another city's weather.
     const city = "北京";
@@ -479,7 +500,7 @@
     setText("#boardingStatusLabel", state.itinerary
       ? (isEnglish ? `${destination} · ${state.itinerary.durationDays}-day trip ready` : `${destination} · ${state.itinerary.durationDays} 天行程已准备`)
       : (isEnglish ? "Complete your preferences to build a real route" : "填写偏好后生成真实路线"));
-    setText("#flightRouteLabel", `${flightCode} · ${destination === pendingDestination ? (isEnglish ? "DESTINATION PENDING" : "目的地待生成") : (isEnglish ? `TO ${destination}` : `目的地 ${destination}`)}`);
+    setText("#flightRouteLabel", destination === pendingDestination ? (isEnglish ? "Choose a destination" : "选择目的地") : destination);
     setText("#flightStatusLabel", `${state.profile?.name || (isEnglish ? "Traveler" : "用户")} · ${destination === pendingDestination ? (isEnglish ? "DESTINATION PENDING" : "等待目的地") : destination} · ${status}`);
     setText("#boardingFlightCode", flightCode);
     setText("#boardingIssuedDate", date);
@@ -934,21 +955,52 @@
       toast("请先生成旅程，再导出旅程档案");
       return;
     }
-    const archive = {
-      product: "TripTune",
-      exportedAt: new Date().toISOString(),
-      traveler: { id: state.profileId, name: state.profile?.name, interests: state.profile?.interests },
-      itinerary: state.itinerary,
-      feedback: state.feedback
+    const trip = state.itinerary;
+    const canvas = document.createElement("canvas");
+    canvas.width = 1200;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) { toast("当前浏览器暂不支持图片导出"); return; }
+    const lines = [];
+    const wrap = (text, size, color, gap = 16) => {
+      ctx.font = `${size}px sans-serif`;
+      let line = "";
+      for (const char of String(text || "")) {
+        if (char === "\n" || ctx.measureText(line + char).width > 1020) {
+          lines.push({text:line,size,color,gap:8}); line = char === "\n" ? "" : char;
+        } else line += char;
+      }
+      lines.push({text:line,size,color,gap});
     };
-    const blob = new Blob([JSON.stringify(archive, null, 2)], { type: "application/json;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `TripTune-${state.itinerary.destination}-${new Date().toISOString().slice(0, 10)}.json`;
-    link.click();
-    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-    toast("已下载 JSON 行程文件，包含路线和反馈记录");
+    wrap("TripTune",64,"#234944",20);
+    wrap(`${trip.destination} · ${trip.durationDays}天旅程`,48,"#234944",16);
+    wrap("为你量身定制的旅程",28,"#ad603f",32);
+    for (const [index,day] of (trip.days || []).entries()) {
+      wrap(`第${index+1}天 · ${day.title || "当天安排"}`,34,"#ad603f",14);
+      wrap(day.description || day.desc || "",26,"#50635e",16);
+      for (const activity of day.activityDetails || day.activities || []) {
+        wrap(typeof activity === "string" ? `— ${activity}` : `${activity.time || ""}  ${activity.title || activity.name || ""}`,28,"#234944",14);
+      }
+      wrap("",16,"#234944",24);
+    }
+    wrap("旅行计划 · 不代表实际到访记录",22,"#50635e",10);
+    canvas.height = Math.ceil(160 + lines.reduce((height,line) => height + line.size * 1.4 + line.gap,0));
+    ctx.fillStyle = "#fffaf0"; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = "#ad603f"; ctx.fillRect(80,40,100,6);
+    let y = 90;
+    ctx.textBaseline = "top";
+    for (const line of lines) {
+      ctx.font = `${line.size}px sans-serif`; ctx.fillStyle = line.color;
+      ctx.fillText(line.text,90,y); y += line.size * 1.4 + line.gap;
+    }
+    canvas.toBlob(blob => {
+      if (!blob) { toast("图片生成失败，请重试"); return; }
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a"); link.href = url;
+      link.download = `TripTune-${trip.destination}-旅程.png`;
+      document.body.appendChild(link); link.click(); link.remove();
+      setTimeout(() => URL.revokeObjectURL(url),60000);
+      toast("旅程图片已生成");
+    },"image/png");
   }
 
   function renderProof(payload) {
@@ -987,6 +1039,29 @@
     return createPhotoCover(photo, photo?.caption, photo?.caption);
   }
 
+  function registerPhotoCredit(photo, label) {
+    const page = document.getElementById("view-06");
+    if (!page || !photo?.source) return;
+    let details = document.getElementById("photoAcknowledgements");
+    if (!details) {
+      details = document.createElement("details");
+      details.id = "photoAcknowledgements";
+      details.className = "mt-6 text-xs text-slate-500";
+      const summary = document.createElement("summary");
+      summary.textContent = "图片致谢";
+      details.appendChild(summary);
+      page.appendChild(details);
+    }
+    if ([...details.querySelectorAll("a")].some(a => a.getAttribute("href") === photo.source)) return;
+    const link = document.createElement("a");
+    link.href = photo.source;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = `${label || "图片"} · ${photo.author} · ${photo.license}（已裁切）`;
+    const item = document.createElement("p");
+    item.appendChild(link); details.appendChild(item);
+  }
+
   function createPhotoCover(photo, alt, label) {
     if (!photo) return null;
     const figure = document.createElement("figure");
@@ -1009,7 +1084,8 @@
     credit.onclick = (event) => event.stopPropagation();
     credit.onkeydown = (event) => event.stopPropagation();
     caption.append(credit);
-    figure.append(img, caption);
+    registerPhotoCredit(photo, label);
+    figure.append(img);
     img.src = photo.src;
     return figure;
   }
@@ -1097,8 +1173,8 @@
     setText("#metricStaySubValue", "减少住宿迁移与折返");
     setText("#metricRadiusValue", city?.radius || "多街区组合");
     setText("#metricRadiusSubValue", `来自 ${city?.placeCount || "城市"} 个候选地点`);
-    setText("#flightRouteLabel", `${flightCode} · 目的地: ${itinerary.destination}`);
-    setText("#flightStatusLabel", `航班 ${flightCode} · 目的地 ${itinerary.destination} · 座位 18A`);
+    setText("#flightRouteLabel", itinerary.destination);
+    setText("#flightStatusLabel", `${itinerary.destination} · ${itinerary.durationDays}天旅程`);
     setText("#waypointValue", `${city?.code || itinerary.destination} · LIVE`);
     setText("#boardingDestinationCode", city?.code || itinerary.destination);
     setText("#boardingOriginCode", "BASE");
@@ -1692,6 +1768,11 @@
   }
 
   function patchHandlers() {
+    const brand = document.querySelector('[data-purpose="sidebar-brand"]');
+    if (brand) {
+      const logo = document.createElement("img"); logo.src="/assets/triptune-logo.png";logo.alt="TripTune";logo.style.cssText="width:170px;height:auto;display:block";
+      brand.replaceChildren(logo);
+    }
     ["duration", "partySize"].forEach(id => {
       const select = document.getElementById(id);
       if (!select || document.getElementById(`${id}Stepper`)) return;
@@ -1783,6 +1864,53 @@
     const exportButton = document.querySelector('[data-i18n="btnExportArchive"]');
     if (exportButton) exportButton.onclick = exportTripArchive;
     patchEditableSurfaces();
+    setupPlanningChat();
+  }
+
+  function setupPlanningChat() {
+    const page = document.getElementById("view-01");
+    if (!page || document.getElementById("planningChat")) return;
+    const section = document.createElement("section");
+    section.id = "planningChat";
+    section.className = "planning-chat";
+    section.innerHTML = `<h3>说说你想怎么旅行</h3><label for="planningMessage">目的地、天数、同行人数，以及想做的事</label><textarea id="planningMessage" rows="3" maxlength="2000" placeholder="比如：去北京三天，两个人，想逛书店和美术馆，每天慢慢逛。"></textarea><p class="planning-privacy">发送的文字将由魔搭模型处理，不会附带你的个人资料或旅行回忆。当前支持六座城市、1—7天行程。</p><button type="button" id="planningSend">帮我整理安排</button><div id="planningReply" role="status" aria-live="polite"></div><button type="button" id="planningConfirm" hidden>确认并生成行程</button>`;
+    page.children[0].after(section);
+    const input = section.querySelector("textarea");
+    const send = section.querySelector("#planningSend");
+    const reply = section.querySelector("#planningReply");
+    const confirm = section.querySelector("#planningConfirm");
+    let proposal = null;
+    input.addEventListener("input", () => { proposal=null;confirm.hidden=true; });
+    send.onclick = async () => {
+      if (!input.value.trim()) { input.focus(); return; }
+      const submitted = input.value;
+      send.disabled=true;send.textContent="正在整理…";confirm.hidden=true;proposal=null;
+      reply.textContent="";
+      try {
+        const result=await request("/api/planning/interpret",{method:"POST",body:JSON.stringify({message:submitted})});
+        if (input.value!==submitted) { reply.textContent="内容已修改，请重新发送。"; return; }
+        proposal=result.proposal;
+        const labels={destination:"目的地",durationDays:"天数",partySize:"人数",budget:"预算（元）",interests:"想体验",pace:"节奏"};
+        const paces={relaxed:"慢慢逛",balanced:"有重点也有休息",dense:"多安排一些"};
+        reply.replaceChildren();
+        for (const [key,value] of Object.entries(proposal)) {
+          const line=document.createElement("p");
+          line.textContent=`${labels[key] || key}：${key==='pace'?paces[value]:Array.isArray(value)?value.join('、'):value}`;
+          reply.appendChild(line);
+        }
+        const note=document.createElement("p");note.textContent="未提到的内容保留当前填写值。可以修改上方文字重新整理，确认后才会生成并保存。";reply.appendChild(note);
+        confirm.hidden=Object.keys(proposal).length===0;
+        if (confirm.hidden) note.textContent="请补充想去的城市、天数或兴趣。";
+      } catch(error) { reply.textContent=error.message; }
+      finally { send.disabled=false;send.textContent="帮我整理安排"; }
+    };
+    confirm.onclick=async () => {
+      if (!proposal) return;
+      const merged={...collectBrief(),...proposal};
+      renderBriefFromItinerary({...merged,selectedInterests:merged.interests});
+      confirm.disabled=true;
+      try { await generateItinerary(); } finally {confirm.disabled=false;}
+    };
   }
 
   window.generateItinerary = generateItinerary;
@@ -1922,7 +2050,7 @@
       for (const trip of trips) {
         const row = document.createElement("button");
         row.className = "saved-trip-open w-full p-5 flex flex-wrap items-center justify-between gap-3 text-left transition";
-        const title = document.createElement("strong"); title.textContent = `${trip.destination} · ${trip.durationDays}天`;
+        const title = document.createElement("strong"); title.textContent = trip.displayName || `${trip.destination} · ${trip.durationDays}天`;
         const meta = document.createElement("span"); meta.className = "saved-trip-meta"; meta.textContent = `${new Date(trip.createdAt).toLocaleDateString("zh-CN")} 保存`;
         row.setAttribute("aria-label", `查看${trip.destination}${trip.durationDays}天旅程`);
         row.append(title, meta);
@@ -1949,10 +2077,29 @@
           row.prepend(cover);
         }
         entry.appendChild(row);
+        const actions = document.createElement("div"); actions.className = "saved-trip-actions";
+        const rename = document.createElement("button"); rename.type="button"; rename.textContent="重命名";
+        const remove = document.createElement("button"); remove.type="button"; remove.textContent="删除";
+        const manage = async (action,name) => { await request(`/api/itineraries/${trip.id}`,{method:"POST",body:JSON.stringify({profileId,action,name})}); };
+        rename.onclick = async () => {
+          const name = window.prompt("给这段旅程起个名字",trip.displayName || `${trip.destination} · ${trip.durationDays}天`);
+          if (!name?.trim()) return;
+          try { await manage("rename",name.trim()); await renderPersonalPage(); } catch { toast("修改失败，请重试"); }
+        };
+        remove.onclick = async () => {
+          if (!window.confirm("从已保存旅程中删除？当前是共享体验档案，其他使用者也会看到此修改。")) return;
+          try {
+            await manage("delete"); entry.replaceChildren();
+            const undo = document.createElement("button"); undo.type="button";undo.className="saved-trip-actions";undo.textContent="已删除 · 撤销";
+            undo.onclick=async()=>{try{await manage("restore");await renderPersonalPage();}catch{toast("恢复失败，请重试");}};
+            entry.append(undo);
+          } catch { toast("删除失败，请重试"); }
+        };
+        actions.append(rename,remove); entry.append(actions);
         if (credits) entry.appendChild(credits);
         list.appendChild(entry);
       }
-      if (!trips.length) { const empty = document.createElement("p"); empty.className = "p-5 text-sm text-slate-500"; empty.textContent = "还没有保存的旅程。填写规划旅行，开始第一段旅行。"; list.appendChild(empty); }
+      if (!trips.length) { const empty = document.createElement("p"); empty.className = "p-5 text-sm text-slate-500"; empty.textContent = "还没有保存的旅程。填写规划旅程，开始第一段旅行。"; list.appendChild(empty); }
     } catch (error) {
       setText("#personalTrips", "暂时无法读取旅程");
       setText("#personalError", `加载失败：${error.message}。请重新点击「我的」重试。`);
