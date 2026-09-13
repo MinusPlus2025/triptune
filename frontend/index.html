@@ -79,6 +79,9 @@
     label:has(input[name="pace"]:checked)::after { background:#fff; border:4px solid #164e5b; outline:2px solid #fff; }
     .interest-tag:focus-visible,.incident-btn:focus-visible,label:has(input[name="pace"]:focus-visible) { outline:3px solid #318697; outline-offset:3px; }
     .editable-surface { cursor: pointer; }
+    .trip-practical-details { padding:14px 0; border-bottom:1px solid #d6dfd8; }
+    .trip-practical-details summary { cursor:pointer; color:#36545a; font-size:15px; }
+    @media(max-width:767px) { #dataProofPanel { display:none; } [data-purpose="overview-metrics"] > div { flex-wrap:wrap; } [data-purpose="overview-metrics"] > div > :last-child { display:none; } }
     #workspaceContainer { background-color:#f7f5ef; }
     .material-symbols-outlined { font-variation-settings:'FILL' 0,'wght' 350,'GRAD' 0,'opsz' 24; }
     #view-02 h2,#view-03 h2,#view-06 h2 { font-size:clamp(27px,3vw,36px); letter-spacing:-.025em; line-height:1.35; }
@@ -1603,7 +1606,7 @@
       skipSwipe: "已有想法？直接填写旅行偏好",
       briefHeader: "规划旅行",
       briefSub: "告诉我们你的兴趣、节奏与预算，生成真正适合你的旅程",
-      briefBasic: "基本参数",
+      briefBasic: "这次怎么出发",
       briefDest: "目的地",
       briefDays: "出行天数",
       briefBudget: "预算范围",

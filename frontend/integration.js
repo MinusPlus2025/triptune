@@ -176,6 +176,7 @@
       summary.append(heading, detail, note);
     };
     page.addEventListener("input", update); page.addEventListener("change", update); page.addEventListener("click", () => queueMicrotask(update));
+    window.refreshPlanningSummary = update;
     update();
   }
 
@@ -1695,6 +1696,7 @@
     const originalSwitch = window.switchView;
     window.switchView = (key) => {
       originalSwitch(key);
+      if (key === "01") window.refreshPlanningSummary?.();
       refresh();
       const active = ["03", "04", "05"].includes(key) ? "02" : key;
       document.querySelectorAll("[data-nav]").forEach(button => {
@@ -1704,6 +1706,14 @@
       moveSlider();
     };
     requestAnimationFrame(moveSlider);
+    const metrics = document.querySelector('[data-purpose="overview-metrics"]');
+    if (metrics && !metrics.closest("details")) {
+      const disclosure = document.createElement("details");
+      disclosure.className = "trip-practical-details";
+      const title = document.createElement("summary");
+      title.textContent = "交通、住宿区域与预算";
+      metrics.before(disclosure); disclosure.append(title, metrics);
+    }
     ["02", "03", "04", "05"].forEach(key => {
       const page = document.getElementById(`view-${key}`);
       const nav = document.createElement("nav");
