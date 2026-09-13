@@ -1574,6 +1574,20 @@
 
   window.generateItinerary = generateItinerary;
   function setupCoreNavigation() {
+    const rail = document.querySelector('[data-purpose="sidebar-nav"]');
+    const slider = document.createElement("div");
+    slider.className = "nav-glass-slider";
+    slider.setAttribute("aria-hidden", "true");
+    rail?.appendChild(slider);
+    const moveSlider = () => {
+      const active = rail?.querySelector('[aria-current="page"]:not([hidden])');
+      if (!active) { slider.style.opacity = "0"; return; }
+      slider.style.width = `${active.offsetWidth}px`;
+      slider.style.height = `${active.offsetHeight}px`;
+      slider.style.transform = `translate3d(${active.offsetLeft}px,${active.offsetTop}px,0)`;
+      slider.style.opacity = "1";
+    };
+    if (rail) new ResizeObserver(moveSlider).observe(rail);
     const names = { "01": ["规划旅行", "Plan a trip"], "02": ["我的行程", "My trips"], "06": ["我的", "My space"] };
     const refresh = () => {
       const en = document.documentElement.lang === "en";
@@ -1597,7 +1611,9 @@
         if (button.dataset.nav === active) button.setAttribute("aria-current", "page");
         else button.removeAttribute("aria-current");
       });
+      moveSlider();
     };
+    requestAnimationFrame(moveSlider);
     ["02", "03", "04", "05"].forEach(key => {
       const page = document.getElementById(`view-${key}`);
       const nav = document.createElement("nav");

@@ -121,6 +121,11 @@
     #windowShadeGrip:focus-visible { outline: 2px solid #155e75; outline-offset: -4px; border-radius: 12px; }
     .window-paused *, .window-paused *::before, .window-paused *::after { animation-play-state: paused !important; }
     [data-nav][hidden] { display: none !important; }
+    [data-purpose="sidebar-nav"] { position: relative; isolation: isolate; }
+    [data-purpose="sidebar-nav"] [data-nav] { position: relative; z-index: 1; background: transparent !important; border-color: transparent !important; box-shadow: none !important; }
+    [data-purpose="sidebar-nav"] [data-nav]:focus-visible { outline: 2px solid #176177; outline-offset: 2px; }
+    .nav-glass-slider { position:absolute; top:0; left:0; margin:0 !important; pointer-events:none; border-radius:14px; background:linear-gradient(135deg,rgba(255,255,255,.85),rgba(199,229,232,.48)); backdrop-filter:blur(12px) saturate(150%); -webkit-backdrop-filter:blur(12px) saturate(150%); box-shadow:inset 0 1px 0 rgba(255,255,255,.95),inset 0 -1px 0 rgba(51,103,114,.12),0 4px 10px rgba(23,71,82,.1); transition:transform 380ms cubic-bezier(.16,1,.3,1),opacity 140ms ease; }
+    @media(prefers-reduced-motion:reduce) { .nav-glass-slider { transition:opacity 100ms ease; } }
     [data-nav][aria-current="page"], nav[aria-label="当前旅程操作"] [aria-current="page"] { background: #eaf3f5; color: #0f3d4c; font-weight: 700; }
     :root { --cabin-closed: 0%; --cabin-frame-light: 1; }
     #workspaceContainer:has(#view-00:not(.hidden)) {
@@ -758,7 +763,7 @@
 <div class="w-full mt-6 space-y-3">
 <button class="w-full py-3.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-sm font-semibold transition shadow-md hover:shadow-lg flex items-center justify-center gap-2 group" data-purpose="swipe-boarding-btn" onclick="enterBoarding()">
 <span class="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
-<span data-i18n="enterBriefBtn" class="">轻触进入旅程需求简报</span>
+<span data-i18n="enterBriefBtn" class="">开始规划旅行</span>
 </button>
 <div class="text-center">
 <button class="text-xs text-slate-400 hover:text-slate-600 underline font-medium" data-i18n="skipSwipe" onclick="enterBoarding()">已有想法？直接填写旅行偏好</button>
@@ -775,7 +780,7 @@
 <section class="hidden max-w-5xl mx-auto space-y-6" id="view-01">
 <div class="flex items-center justify-between pb-4 border-b thin-border">
 <div>
-<h2 class="text-xl font-bold text-slate-900" data-i18n="briefHeader">出发需求简报</h2>
+<h2 class="text-xl font-bold text-slate-900" data-i18n="briefHeader">规划旅行</h2>
 <p class="text-xs text-slate-500 mt-0.5" data-i18n="briefSub">告诉我们你的兴趣、节奏与预算，生成真正适合你的旅程</p>
 </div>
 <span class="text-xs font-mono text-brand-600 bg-brand-50 px-2.5 py-1 rounded-md border border-brand-100">STAGE 01 / BRIEF</span>
@@ -1516,7 +1521,7 @@
       passSeat: "座位 / 登机门",
       enterBriefBtn: "开始规划旅程",
       skipSwipe: "已有想法？直接填写旅行偏好",
-      briefHeader: "出发需求简报",
+      briefHeader: "规划旅行",
       briefSub: "告诉我们你的兴趣、节奏与预算，生成真正适合你的旅程",
       briefBasic: "基本参数",
       briefDest: "目的地",
