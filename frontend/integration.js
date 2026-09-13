@@ -1813,13 +1813,13 @@
     page.id = "view-06";
     page.className = "hidden max-w-5xl mx-auto space-y-6";
     page.innerHTML = `
-      <header><h2 class="text-2xl font-bold text-slate-900">我的旅行</h2><p class="mt-2 text-sm text-slate-600">管理你的偏好，也随时接着上一次的旅程出发。</p></header>
+      <header><h2 class="text-2xl font-bold text-slate-900">我的旅行</h2><p class="mt-2 text-sm text-slate-600">喜欢的地方，留着下次接着逛。</p></header>
       <div class="personal-identity bg-white rounded-xl p-5 sm:p-6 flex flex-wrap items-center justify-between gap-4">
         <div><div id="personalAvatar" style="width:64px;height:64px;border-radius:50%;overflow:hidden;background:#e5eff0;display:grid;place-items:center;margin-bottom:12px"></div><h3 id="personalName" class="text-xl font-semibold text-brand-800">正在读取资料…</h3><p class="mt-2 text-xs text-slate-500">共享体验档案，请勿填写个人隐私</p></div>
         <button id="personalEdit" class="px-4 py-2.5 rounded-lg bg-brand-700 text-white text-sm font-semibold">编辑资料与偏好</button>
       </div>
       <div class="personal-preferences grid grid-cols-1 md:grid-cols-2 gap-6">
-        <section class="bg-white rounded-xl border thin-border p-5"><h3 class="text-base font-semibold">我的旅行偏好</h3><dl class="mt-4 space-y-4 text-sm"><div><dt class="text-slate-500">常用预算</dt><dd id="personalBudget" class="mt-1 font-semibold"></dd></div><div><dt class="text-slate-500">旅行节奏</dt><dd id="personalPace" class="mt-1"></dd></div><div><dt class="text-slate-500">长期兴趣</dt><dd id="personalInterests" class="mt-2 flex flex-wrap gap-2"></dd></div></dl></section>
+        <section class="personal-tastes"><div class="personal-section-heading"><h3 class="text-base font-semibold">我喜欢这样玩</h3><button id="personalTasteEdit" type="button">调整偏好</button></div><div id="personalInterests" class="personal-interest-cloud"></div><div class="personal-travel-style"><span class="material-symbols-outlined" aria-hidden="true">footprint</span><p id="personalPace"></p></div><div class="personal-travel-style"><span class="material-symbols-outlined" aria-hidden="true">account_balance_wallet</span><p>常用预算 <strong id="personalBudget"></strong></p></div></section>
         <section class="bg-white rounded-xl border thin-border p-5"><h3 class="text-base font-semibold">我的反馈</h3><p class="mt-2 text-sm text-slate-500">你的选择会参与下一次旅行推荐。</p><div id="personalFeedback" class="mt-4 space-y-3 text-sm"></div></section>
       </div>
       <section class="personal-journeys"><div class="flex items-center justify-between gap-3"><h3 class="text-lg font-semibold">已保存的旅程</h3><button id="personalNewTrip" class="text-sm font-semibold text-brand-700">规划新旅程 →</button></div><div id="personalTrips" class="mt-4"></div></section>
@@ -1827,6 +1827,7 @@
     document.getElementById("view-05")?.after(page);
     page.querySelector(".personal-preferences").before(page.querySelector(".personal-journeys"));
     document.getElementById("personalEdit").onclick = openProfileEditor;
+    document.getElementById("personalTasteEdit").onclick = openProfileEditor;
     document.getElementById("personalNewTrip").onclick = () => window.switchView("01");
   }
 
@@ -1846,7 +1847,7 @@
       setText("#personalPace", ({relaxed:"慢慢逛，留足休息时间", balanced:"有重点，也有自由时间", dense:"尽量多看，少走回头路"})[profile.pace]);
       const interests = document.getElementById("personalInterests");
       interests.replaceChildren(...profile.interests.map(interest => {
-        const tag = document.createElement("span"); tag.className = "bg-brand-50 text-brand-700 rounded-full px-3 py-1 text-xs"; tag.textContent = interest; return tag;
+        const tag = document.createElement("span"); tag.className = "personal-interest"; tag.textContent = interest; return tag;
       }));
       const feedback = document.getElementById("personalFeedback");
       feedback.replaceChildren();

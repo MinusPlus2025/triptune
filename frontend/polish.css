@@ -81,3 +81,32 @@ button:disabled { cursor: wait; opacity: .6; }
 @media(prefers-reduced-motion:reduce) {
  .destination-gallery button, .saved-trip-open { transition: none; }
 }
+/* Personal collection: compact identity, photo albums, and preference labels. */
+#view-06 { padding-bottom:24px; }
+#view-06 .personal-identity { padding:24px 0; background:transparent; border-bottom:1px solid #d8dfd5; border-radius:0; }
+#view-06 #personalAvatar { width:80px !important;height:80px !important;border:5px solid #e4ebdf; }
+#view-06 .personal-identity > div { grid-template-columns:80px 1fr; }
+#view-06 #personalName { font-size:27px;overflow-wrap:anywhere; }
+#view-06 #personalEdit { border:0;background:#e4ebdf;color:#244e44;border-radius:24px;padding:10px 20px; }
+.personal-section-heading { display:flex;justify-content:space-between;gap:16px;align-items:center; }
+#personalTasteEdit { min-height:44px;color:#285d52;font-size:14px;text-decoration:underline;text-underline-offset:4px; }
+.personal-interest-cloud { display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 24px; }
+.personal-interest { font-size:16px;padding:10px 15px;border-radius:8px;background:#e4ece3;color:#234d43; }
+.personal-interest:nth-child(3n+2) { background:#f1dfcc;color:#754828; }
+.personal-interest:nth-child(3n) { background:#dfe9ed;color:#365562; }
+.personal-travel-style { display:flex;align-items:center;gap:12px;margin-top:14px;font-size:15px;color:#43594e;line-height:1.6; }
+.personal-travel-style .material-symbols-outlined { font-size:23px;color:#608376; }
+#personalFeedback p { padding:14px 0;border-bottom:1px solid #dde3da;line-height:1.7; }
+#view-06 .saved-trip-entry { border-radius:3px;background:#fff;padding:9px;box-shadow:0 8px 20px #293d3610; }
+#view-06 .saved-trip-entry .city-cover { border-radius:2px;overflow:hidden; }
+#view-06 .saved-trip-open { padding:16px 8px; }
+#view-06 .saved-trip-open strong { font-family:'TripTune Heading',serif;font-size:25px;font-weight:400; }
+@media(max-width:767px) {
+ #view-06 #personalEdit { width:auto;margin-left:96px; }
+ #view-06 .personal-identity { gap:8px;padding-top:8px; }
+ #view-06 .personal-identity p { font-size:11px; }
+ #view-06 #personalTrips { display:flex;overflow-x:auto;scroll-snap-type:x proximity;gap:18px;padding:4px 4px 16px; }
+ #view-06 .saved-trip-entry { flex:0 0 88%;scroll-snap-align:start; }
+ #view-06 .saved-trip-entry:only-child { flex-basis:100%; }
+ #view-06 .personal-preferences > section { padding:20px 0; }
+}
