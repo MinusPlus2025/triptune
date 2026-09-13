@@ -76,7 +76,7 @@ async function parseBody(req) {
     if (size > 64 * 1024) throw Object.assign(new Error("body_too_large"), { status: 413 });
     chunks.push(chunk);
   }
-  if (!chunks.length) return {};
+  if (!chunks.length) return req.account ? {profileId:req.account.profile_id} : {};
   try {
     const body = JSON.parse(Buffer.concat(chunks).toString("utf8"));
     if (req.account) body.profileId = req.account.profile_id;

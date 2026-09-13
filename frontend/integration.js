@@ -2168,10 +2168,17 @@
     const section=document.createElement('section');section.id='privateMemories';section.className='planning-chat';
     section.innerHTML='<h3>旅行回忆</h3><p>仅自己可见，不发送给 AI。</p><button type="button" id="newMemory">记一笔</button><button type="button" id="accountLogout">退出登录</button><form hidden id="memoryForm"><label>日期<input type="date" name="date" required></label><label>地点<input name="place" maxlength="100"></label><label>写点什么<textarea name="text" maxlength="2000" rows="4"></textarea></label><label>添加照片<input type="file" accept="image/jpeg,image/png,image/webp" name="photo"></label><label><input type="checkbox" name="draft">先存为草稿</label><button type="submit">保存</button><button type="button" id="cancelMemory">取消</button></form><p id="memoryStatus" role="status"></p><div id="memoryList"></div>';
     page.appendChild(section);
+    page.querySelector('.personal-preferences')?.before(section);
     const form=section.querySelector('form'),status=section.querySelector('#memoryStatus'),list=section.querySelector('#memoryList');
     let editing=null,photo='';
     const open=record=>{editing=record?.id||null;photo=record?.photo||'';form.reset();form.elements.date.value=record?.date||new Date().toLocaleDateString('en-CA');form.elements.place.value=record?.place||'';form.elements.text.value=record?.text||'';form.elements.draft.checked=!!record?.draft;form.hidden=false;form.elements.text.focus();};
     section.querySelector('#newMemory').onclick=()=>open(null);
+    for(const id of ['view-02','view-03']){
+      const detail=document.getElementById(id);if(!detail)continue;
+      const entry=document.createElement('button');entry.type='button';entry.className='saved-trip-actions';entry.textContent='记一笔';
+      entry.onclick=()=>{window.switchView('06');open(null);form.elements.place.value=state.itinerary?.destination||'';};
+      detail.prepend(entry);
+    }
     section.querySelector('#cancelMemory').onclick=()=>{form.hidden=true;};
     section.querySelector('#accountLogout').onclick=async()=>{try{await request('/api/auth/logout',{method:'POST',body:'{}'});window.location.reload();}catch(error){status.textContent=error.message;}};
     const removePhoto=document.createElement('button');removePhoto.type='button';removePhoto.textContent='移除照片';removePhoto.onclick=()=>{photo='';form.elements.photo.value='';status.textContent='照片已移除，保存后生效。';};form.elements.photo.after(removePhoto);
