@@ -387,8 +387,7 @@
     badge.textContent = city ? `${city} · 查询中` : "先选目的地";
     if (!positions[city]) return;
     try {
-      const [lat,lon] = positions[city];
-      const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,is_day&timezone=Asia%2FShanghai`, {signal:AbortSignal.timeout(10000)});
+      const response = await fetch(`/api/weather/${encodeURIComponent(city)}`, {signal:AbortSignal.timeout(15000)});
       if (!response.ok) throw new Error("weather unavailable");
       const data = (await response.json()).current;
       if (!data || !Number.isFinite(data.temperature_2m) || !Number.isFinite(data.weather_code)) throw new Error("invalid weather");

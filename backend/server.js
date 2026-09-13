@@ -1,4 +1,5 @@
 import http from "node:http";
+import { getWeather } from "./weather.js";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -134,6 +135,10 @@ function ensureLatestItinerary(profileId) {
 }
 
 async function api(req, res, pathname) {
+  if (req.method === "GET" && pathname.startsWith("/api/weather/")) {
+    try { return json(res, 200, await getWeather(decodeURIComponent(pathname.slice(13)))); }
+    catch { return apiError(res, 503, "weather_unavailable", "天气暂未更新，请稍后重试。"); }
+  }
   if (req.method === "OPTIONS") {
     res.writeHead(204, {
       "Access-Control-Allow-Origin": "*",
