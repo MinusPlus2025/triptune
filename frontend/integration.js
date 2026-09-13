@@ -141,6 +141,44 @@
     });
   }
 
+  function setupPlanningExperience() {
+    const page = document.getElementById("view-01");
+    if (!page || page.querySelector(".destination-gallery")) return;
+    const gallery = document.createElement("div");
+    gallery.className = "destination-gallery";
+    gallery.setAttribute("aria-label", "选择想去的城市");
+    const destination = document.querySelector('input[list="supportedDestinations"]');
+    Object.entries(window.tripTuneCityImages || {}).forEach(([city, photo]) => {
+      const figure = document.createElement("figure");
+      const button = document.createElement("button");
+      button.type = "button"; button.dataset.city = city;
+      button.setAttribute("aria-pressed", "false");
+      button.innerHTML = `<img src="${photo.src}" alt="${city}城市风景" loading="lazy"><span>${city}</span><b aria-hidden="true">✓</b>`;
+      button.onclick = () => { destination.value = city; destination.dispatchEvent(new Event("input", {bubbles:true})); destination.dispatchEvent(new Event("change", {bubbles:true})); };
+      const credit = document.createElement("a"); credit.href = photo.source; credit.target = "_blank"; credit.rel = "noopener";
+      credit.textContent = `${photo.author} · ${photo.license}`;
+      figure.append(button, credit); gallery.appendChild(figure);
+    });
+    page.children[0].after(gallery);
+    const summary = document.createElement("div");
+    summary.className = "planning-summary"; summary.setAttribute("aria-live", "polite");
+    const side = page.querySelector('[data-purpose="brief-layout"] > div:last-child > div');
+    side.prepend(summary);
+    const update = () => {
+      const city = destination.value.trim();
+      gallery.querySelectorAll("button").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.city === city)));
+      const days = document.getElementById("duration").value;
+      const interests = selectedInterestsFromForm();
+      summary.replaceChildren();
+      const heading = document.createElement("h3"); heading.textContent = city ? `${city}，准备出发` : "这次旅行，由你决定";
+      const detail = document.createElement("p"); detail.textContent = `${days} 天 · 预算 ¥${document.getElementById("briefBudgetSelect").value}`;
+      const note = document.createElement("p"); note.textContent = interests.length ? `想体验：${interests.join("、")}` : "选几个感兴趣的体验，让安排更合心意。";
+      summary.append(heading, detail, note);
+    };
+    page.addEventListener("input", update); page.addEventListener("change", update); page.addEventListener("click", () => queueMicrotask(update));
+    update();
+  }
+
   function iconForInterest(value) {
     const text = String(value || "");
     if (/骑行/.test(text)) return "directions_bike";
@@ -1536,6 +1574,7 @@
   function patchHandlers() {
     setupPersonalPage();
     setupCoreNavigation();
+    setupPlanningExperience();
     ensureFormControls();
     setupInterestTags();
     const generateButton = document.querySelector('[data-i18n="btnGeneratePlan"]');
