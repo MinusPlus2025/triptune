@@ -1,4 +1,24 @@
 /* Shared refinements: quiet surfaces, clear actions, and saved trips first. */
+@font-face {
+ font-family:'TripTune Heading';
+ src:url('/assets/fonts/travel-heading.woff2') format('woff2');
+ font-style:normal;
+ font-weight:400;
+ font-display:swap;
+}
+[id^="view-"] h2[data-i18n$="Header"], #view-06 > header h2, #view-00 h1 {
+ font-family:'TripTune Heading','Kaiti SC',serif;
+ font-weight:400;
+ font-synthesis:none;
+ font-size:clamp(30px,3vw,38px);
+ line-height:1.35;
+ letter-spacing:.015em;
+ text-wrap:balance;
+}
+#view-00 h1 { font-size:clamp(30px,3.5vw,42px); }
+@media(max-width:480px) {
+ [id^="view-"] h2[data-i18n$="Header"], #view-06 > header h2 { font-size:30px; }
+}
 #planeWindowOuter { width:min(420px,90vw); height:auto; aspect-ratio:580 / 800; }
 #windowViewport {
  --window-aperture: inset(18.5% 17% 19% 18% round 15% 15% 20% 20%);
