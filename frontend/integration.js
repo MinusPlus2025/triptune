@@ -1727,7 +1727,7 @@
       slider.style.opacity = "1";
     };
     if (rail) new ResizeObserver(moveSlider).observe(rail);
-    const names = { "01": ["规划旅行", "Plan a trip"], "02": ["我的行程", "My trips"], "06": ["我的", "My space"] };
+    const names = { "01": ["规划", "Plan"], "02": ["行程", "Trips"], "06": ["我", "Me"] };
     const refresh = () => {
       const en = document.documentElement.lang === "en";
       document.querySelectorAll("[data-nav]").forEach(button => {
@@ -1794,7 +1794,7 @@
     const button = document.createElement("button");
     button.className = "nav-item w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50 transition";
     button.dataset.nav = "06";
-    button.innerHTML = '<div class="flex items-center gap-2.5"><span class="material-symbols-outlined text-[17px]">person</span><span>我的</span></div>';
+    button.innerHTML = '<div class="flex items-center gap-2.5"><span class="material-symbols-outlined text-[17px]">person</span><span>我</span></div>';
     button.onclick = () => window.switchView("06");
     nav?.appendChild(button);
     const page = document.createElement("section");
