@@ -379,6 +379,7 @@
     setText("#flightStatusLabel", `${state.profile?.name || (isEnglish ? "Traveler" : "用户")} · ${destination === pendingDestination ? (isEnglish ? "DESTINATION PENDING" : "等待目的地") : destination} · ${status}`);
     setText("#boardingFlightCode", flightCode);
     setText("#boardingIssuedDate", date);
+    setText("#windowDestinationLabel", destination === pendingDestination ? (isEnglish ? "Where next?" : "下一站，想去哪里？") : `${destination} · ${date}`);
     setText("#boardingSeatGate", `${seat} / ${destinationCode}`);
     const detailLabels = document.querySelectorAll("#windowGlassOverlay > .grid > div > div > span:first-child");
     const labels = isEnglish ? ["SEAT", "FLIGHT", "DATE", "STATUS"] : ["座位", "航班", "日期", "状态"];
@@ -392,6 +393,10 @@
     const shade = document.getElementById("windowShade");
     const overlay = document.getElementById("windowGlassOverlay");
     if (!viewport || !daySky || !shade || !overlay) return;
+    const destinationLabel = document.createElement("div");
+    destinationLabel.id = "windowDestinationLabel";
+    destinationLabel.className = "window-destination";
+    viewport.appendChild(destinationLabel);
 
     if (!viewport.querySelector(".window-plane")) {
       ["cloud-a", "cloud-b", "cloud-c"].forEach((className) => {
@@ -419,27 +424,47 @@
       detail.querySelector("span:last-child")?.setAttribute("id", fieldIds[index]);
     });
 
-    // Procedural sliding noise: no third-party recording or audio asset.
+    // Original short sliding texture and a two-note open/close signature.
     let audioContext;
     let audioSource;
+    const tones = new Set();
     const sound = {
-      pause() { try { audioSource?.stop(); } catch {} audioSource = null; },
+      pause() { try { audioSource?.stop(); } catch {} audioSource = null; tones.forEach(tone => { try { tone.stop(); } catch {} }); tones.clear(); },
+      settle(closed) {
+        if (!audioContext || muted || document.hidden) return;
+        const now = audioContext.currentTime;
+        (closed ? [440, 330] : [330, 440]).forEach((frequency, index) => {
+          const tone = audioContext.createOscillator();
+          const envelope = audioContext.createGain();
+          const start = now + index * 0.11;
+          tone.type = "sine"; tone.frequency.value = frequency;
+          envelope.gain.setValueAtTime(0, start);
+          envelope.gain.linearRampToValueAtTime(0.022, start + 0.018);
+          envelope.gain.exponentialRampToValueAtTime(0.0001, start + 0.28);
+          tone.connect(envelope).connect(audioContext.destination);
+          tones.add(tone);
+          tone.onended = () => { tones.delete(tone); tone.disconnect(); envelope.disconnect(); };
+          tone.start(start); tone.stop(start + 0.3);
+        });
+      },
       async play() {
         const AudioEngine = window.AudioContext || window.webkitAudioContext;
         if (!AudioEngine) return;
         audioContext ||= new AudioEngine();
-        await audioContext.resume();
         this.pause();
+        await audioContext.resume();
+        if (muted || document.hidden) return;
         const length = Math.floor(audioContext.sampleRate * 0.35);
         const buffer = audioContext.createBuffer(1, length, audioContext.sampleRate);
         const samples = buffer.getChannelData(0);
         for (let i = 0; i < length; i++) samples[i] = (Math.random() * 2 - 1) * Math.sin(Math.PI * i / length);
         const source = audioContext.createBufferSource();
         const filter = audioContext.createBiquadFilter();
-        filter.type = "lowpass";
-        filter.frequency.value = 650;
+        filter.type = "bandpass";
+        filter.frequency.value = 420;
+        filter.Q.value = 0.6;
         const gain = audioContext.createGain();
-        gain.gain.value = 0.06;
+        gain.gain.value = 0.035;
         source.buffer = buffer;
         source.connect(filter).connect(gain).connect(audioContext.destination);
         source.onended = () => { source.disconnect(); filter.disconnect(); gain.disconnect(); };
@@ -520,6 +545,7 @@
       document.documentElement.classList.remove("cabin-dragging");
       shade.style.transition = "transform 520ms cubic-bezier(0.16, 1, 0.3, 1)";
       setPercent(moved ? (currentPercent > 52 ? 92 : 12) : (currentPercent > 52 ? 12 : 92));
+      sound.settle(currentPercent > 52);
     };
     shade.addEventListener("pointerdown", beginDrag);
     shade.addEventListener("pointermove", moveDrag);
@@ -533,6 +559,7 @@
       if (event.key === "ArrowUp") { event.preventDefault(); setPercent(current - 8); }
       if (event.key === "Home") { event.preventDefault(); setPercent(12); }
       if (event.key === "End") { event.preventDefault(); setPercent(92); }
+      if (["Home", "End", "Enter", " "].includes(event.key)) sound.settle(currentPercent > 52);
     });
     setPercent(12);
     renderBoardingWindow();
