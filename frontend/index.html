@@ -282,14 +282,19 @@
 
       aside[data-purpose="main-sidebar"] {
         position: fixed;
-        inset: auto 0 0 0;
-        width: 100%;
-        height: calc(4.25rem + env(safe-area-inset-bottom));
+        inset: auto auto calc(12px + env(safe-area-inset-bottom)) 50%;
+        transform: translateX(-50%);
+        width: min(320px, calc(100% - 40px));
+        height: 64px;
         display: block;
-        padding-bottom: env(safe-area-inset-bottom);
-        border-top: 1px solid #e2e7ff;
+        padding-bottom: 0;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(248, 252, 250, .72) !important;
+        backdrop-filter: blur(20px) saturate(145%);
+        -webkit-backdrop-filter: blur(20px) saturate(145%);
         border-right: 0;
-        box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.07);
+        box-shadow: inset 0 1px 1px rgba(255,255,255,.95), 0 8px 28px rgba(21,56,64,.14);
         z-index: 50;
       }
       aside[data-purpose="main-sidebar"] > div:first-child { width: 100%; height: 100%; }
@@ -302,18 +307,18 @@
         gap: 0.125rem;
         width: 100%;
         height: 100%;
-        padding: 0.25rem 0.2rem 0.35rem;
+        padding: 5px;
       }
       [data-purpose="sidebar-nav"] > :not([hidden]) ~ :not([hidden]) { margin-top: 0; }
       [data-purpose="sidebar-nav"] .nav-item {
         width: auto;
         min-width: 0;
-        min-height: 3.5rem;
+        min-height: 54px;
         padding: 0.3rem 0.1rem !important;
         flex-direction: column;
         justify-content: center;
         gap: 0;
-        border-radius: 0.625rem;
+        border-radius: 999px;
       }
       [data-purpose="sidebar-nav"] .nav-item > div {
         min-width: 0;
@@ -334,6 +339,11 @@
         white-space: nowrap;
       }
       [data-purpose="sidebar-nav"] .nav-item > span:last-child { display: none; }
+      [data-purpose="sidebar-nav"] .nav-glass-slider { background:linear-gradient(150deg,rgba(255,255,255,.72),rgba(176,196,191,.25)); box-shadow:inset 0 1px 1px #ffffffd9,inset 0 -1px 1px #31544c14,0 2px 6px #183d3610; }
+      [data-purpose="sidebar-nav"] .nav-item > div { transition:transform 180ms ease; }
+      [data-purpose="sidebar-nav"] .nav-item:active > div { transform:scale(.94); }
+      #workspaceContainer { padding-bottom:calc(104px + env(safe-area-inset-bottom)) !important; }
+      @media(prefers-reduced-motion:reduce) { [data-purpose="sidebar-nav"] .nav-item > div { transition:none; } [data-purpose="sidebar-nav"] .nav-item:active > div { transform:none; } }
 
       main > header {
         min-height: calc(3.5rem + env(safe-area-inset-top));
