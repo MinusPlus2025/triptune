@@ -8,11 +8,16 @@ async function getAmapWeather(city) {
   const response = await fetch(url, {signal:AbortSignal.timeout(6000)});
   if (!response.ok) throw new Error("高德天气请求失败");
   const data = await response.json();
+  if (data.status !== "1") {
+    const code = /^\d{5}$/.test(data.infocode) ? data.infocode : "unknown";
+    throw new Error(`AMAP_API_${code}`);
+  }
   const live = data.lives?.[0];
   const temperature = Number(live?.temperature);
   const time = live?.reporttime?.replace(" ","T");
   const observed = Date.parse(`${time}+08:00`);
-  if (data.status !== "1" || !live || live.temperature === "" || !Number.isFinite(temperature) || !Number.isFinite(observed) || Math.abs(Date.now()-observed)>3*3600000) throw new Error("高德天气数据不可用");
+  if (!live || live.temperature == null || live.temperature === "" || !Number.isFinite(temperature) || !Number.isFinite(observed)) throw new Error("AMAP_DATA_INVALID");
+  if (Math.abs(Date.now()-observed)>3*3600000) throw new Error("AMAP_DATA_STALE");
   const description = live.weather || "";
   const code = /雪/.test(description) ? 73 : /雨|雷/.test(description) ? 61 : /雾|霾|沙|尘/.test(description) ? 45 : /阴/.test(description) ? 3 : /云/.test(description) ? 2 : description === "晴" ? 0 : null;
   if (code === null) throw new Error("暂不支持的天气状态");
@@ -44,7 +49,13 @@ export async function getWeather(city) {
         const result = {city,current,source:"Open-Meteo",fetchedAt:Date.now()};
         cache.set(city,result);
         return result;
-      } catch (error) { if (attempt === 1) throw error; }
+      } catch (error) {
+        if (attempt === 1) {
+          const reason = /^AMAP_(API_\d{5}|API_unknown|DATA_INVALID|DATA_STALE)$/.test(error.message) ? error.message : error.name === "TimeoutError" ? "TIMEOUT" : "WEATHER_REQUEST_FAILED";
+          console.warn("[weather]", process.env.AMAP_API_KEY?.trim() ? "amap" : "open-meteo", reason);
+          throw error;
+        }
+      }
     }
   })();
   pending.set(city,job);
