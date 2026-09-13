@@ -374,7 +374,9 @@
   let windowWeatherFetched = 0;
   let windowWeatherSequence = 0;
   async function refreshWindowWeather() {
-    const city = state.itinerary?.destination || "";
+    // The home-window weather location is Beijing for this presentation.
+    // Keep the query and label together; never relabel another city's weather.
+    const city = "北京";
     const positions = {"北京":[39.9042,116.4074],"上海":[31.2304,121.4737],"杭州":[30.2741,120.1551],"成都":[30.5728,104.0668],"广州":[23.1291,113.2644],"南京":[32.0603,118.7969]};
     if (city === windowWeatherCity && Date.now() - windowWeatherFetched < 600000) return;
     windowWeatherCity = city; windowWeatherFetched = Date.now();
@@ -460,7 +462,7 @@
     setText("#flightStatusLabel", `${state.profile?.name || (isEnglish ? "Traveler" : "用户")} · ${destination === pendingDestination ? (isEnglish ? "DESTINATION PENDING" : "等待目的地") : destination} · ${status}`);
     setText("#boardingFlightCode", flightCode);
     setText("#boardingIssuedDate", date);
-    setText("#windowDestinationLabel", destination === pendingDestination ? (isEnglish ? "Where next?" : "下一站，想去哪里？") : `${destination} · ${date}`);
+    setText("#windowDestinationLabel", `${isEnglish ? "Beijing" : "北京"} · ${date}`);
     setText("#boardingSeatGate", `${seat} / ${destinationCode}`);
     const detailLabels = document.querySelectorAll("#windowGlassOverlay > .grid > div > div > span:first-child");
     const labels = isEnglish ? ["SEAT", "FLIGHT", "DATE", "STATUS"] : ["座位", "航班", "日期", "状态"];
@@ -576,9 +578,15 @@
     document.getElementById("planeWindowOuter").after(muteButton);
     const weatherSource = document.createElement("a");
     weatherSource.href = "https://open-meteo.com/"; weatherSource.target = "_blank"; weatherSource.rel = "noopener";
-    weatherSource.textContent = "天气来源";
+    weatherSource.textContent = "Open-Meteo";
     weatherSource.className = "text-xs text-slate-500 underline";
-    muteButton.after(weatherSource);
+    const credits = document.createElement("details");
+    credits.className = "mt-6 text-xs text-slate-500";
+    const summary = document.createElement("summary");
+    summary.textContent = "数据来源";
+    summary.className = "cursor-pointer py-3";
+    credits.append(summary, weatherSource);
+    document.getElementById("view-06")?.appendChild(credits);
     const playShade = () => {
       if (muted || document.hidden) return;
       sound.play().catch(() => {});
