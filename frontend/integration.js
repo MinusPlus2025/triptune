@@ -370,6 +370,49 @@
     toast(`已加入兴趣：${value}`);
   }
 
+  let windowWeatherCity = "";
+  let windowWeatherFetched = 0;
+  let windowWeatherSequence = 0;
+  async function refreshWindowWeather() {
+    const city = state.itinerary?.destination || "";
+    const positions = {"北京":[39.9042,116.4074],"上海":[31.2304,121.4737],"杭州":[30.2741,120.1551],"成都":[30.5728,104.0668],"广州":[23.1291,113.2644],"南京":[32.0603,118.7969]};
+    if (city === windowWeatherCity && Date.now() - windowWeatherFetched < 600000) return;
+    windowWeatherCity = city; windowWeatherFetched = Date.now();
+    const sequence = ++windowWeatherSequence;
+    const viewport = document.getElementById("windowViewport");
+    let badge = document.getElementById("windowWeatherBadge");
+    if (!viewport) return;
+    if (!badge) { badge = document.createElement("div"); badge.id = "windowWeatherBadge"; badge.setAttribute("aria-live", "polite"); viewport.appendChild(badge); }
+    viewport.dataset.weather = "unknown";
+    badge.textContent = city ? `${city} · 查询中` : "先选目的地";
+    if (!positions[city]) return;
+    try {
+      const [lat,lon] = positions[city];
+      const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,is_day&timezone=Asia%2FShanghai`, {signal:AbortSignal.timeout(10000)});
+      if (!response.ok) throw new Error("weather unavailable");
+      const data = (await response.json()).current;
+      if (!data || !Number.isFinite(data.temperature_2m) || !Number.isFinite(data.weather_code)) throw new Error("invalid weather");
+      if (sequence !== windowWeatherSequence) return;
+      const code = data.weather_code;
+      const kind = code === 0 ? "sun" : code <= 3 ? "cloud" : code >= 71 && code <= 77 || code === 85 || code === 86 ? "snow" : code >= 51 ? "rain" : "fog";
+      viewport.dataset.weather = kind;
+      viewport.dataset.weatherNight = String(!data.is_day);
+      const icons = {sun:data.is_day ? "sunny" : "dark_mode",cloud:"cloud",rain:"rainy",snow:"weather_snowy",fog:"foggy"};
+      const labels = {sun:"晴",cloud:"多云",rain:"雨",snow:"雪",fog:"雾"};
+      badge.replaceChildren();
+      const icon = document.createElement("span"); icon.className = "material-symbols-outlined"; icon.textContent = icons[kind]; icon.setAttribute("aria-hidden","true");
+      const temperature = document.createElement("strong"); temperature.textContent = `${Math.round(data.temperature_2m)}°`;
+      const label = document.createElement("span"); label.textContent = `${city} · ${labels[kind]}`;
+      badge.append(icon,temperature,label);
+      badge.title = `Open-Meteo · ${data.time} · °C`;
+      document.getElementById("skyDayBg").style.opacity = data.is_day ? "1" : "0";
+      document.getElementById("skyNightBg").style.opacity = data.is_day ? "0" : "1";
+    } catch {
+      if (sequence !== windowWeatherSequence) return;
+      badge.textContent = `${city} · 天气暂不可用`;
+      windowWeatherFetched = Date.now() - 540000;
+    }
+  }
   function setAutomaticSky() {
     const hour = new Date().getHours();
     const night = hour < 6 || hour >= 19;
@@ -424,6 +467,7 @@
     const labels = isEnglish ? ["SEAT", "FLIGHT", "DATE", "STATUS"] : ["座位", "航班", "日期", "状态"];
     detailLabels.forEach((label, index) => { if (labels[index]) label.textContent = labels[index]; });
     setAutomaticSky();
+    refreshWindowWeather();
   }
 
   function setupWindowExperience() {
@@ -531,6 +575,11 @@
     muteButton.onclick = () => { muted = !muted; sound.pause(); window.localStorage.setItem("triptune-window-muted", String(muted)); syncMute(); };
     syncMute();
     document.getElementById("planeWindowOuter").after(muteButton);
+    const weatherSource = document.createElement("a");
+    weatherSource.href = "https://open-meteo.com/"; weatherSource.target = "_blank"; weatherSource.rel = "noopener";
+    weatherSource.textContent = "天气 · Open-Meteo";
+    weatherSource.className = "text-xs text-slate-500 underline";
+    muteButton.after(weatherSource);
     const playShade = () => {
       if (muted || document.hidden) return;
       sound.play().catch(() => {});
