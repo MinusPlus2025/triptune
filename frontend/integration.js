@@ -2164,48 +2164,17 @@
   }
 
   function setupPrivateMemories() {
-    const page=document.getElementById('view-06');if(!page||document.getElementById('privateMemories'))return;
-    const section=document.createElement('section');section.id='privateMemories';section.className='planning-chat';
-    section.innerHTML='<h3>旅行回忆</h3><p>仅自己可见，不发送给 AI。</p><button type="button" id="newMemory">记一笔</button><button type="button" id="accountLogout">退出登录</button><form hidden id="memoryForm"><label>日期<input type="date" name="date" required></label><label>地点<input name="place" maxlength="100"></label><label>写点什么<textarea name="text" maxlength="2000" rows="4"></textarea></label><label>添加照片<input type="file" accept="image/jpeg,image/png,image/webp" name="photo"></label><label><input type="checkbox" name="draft">先存为草稿</label><button type="submit">保存</button><button type="button" id="cancelMemory">取消</button></form><p id="memoryStatus" role="status"></p><div id="memoryList"></div>';
-    page.appendChild(section);
-    page.querySelector('.personal-preferences')?.before(section);
-    const form=section.querySelector('form'),status=section.querySelector('#memoryStatus'),list=section.querySelector('#memoryList');
-    let editing=null,photo='';
-    const open=record=>{editing=record?.id||null;photo=record?.photo||'';form.reset();form.elements.date.value=record?.date||new Date().toLocaleDateString('en-CA');form.elements.place.value=record?.place||'';form.elements.text.value=record?.text||'';form.elements.draft.checked=!!record?.draft;form.hidden=false;form.elements.text.focus();};
-    section.querySelector('#newMemory').onclick=()=>open(null);
-    for(const id of ['view-02','view-03']){
-      const detail=document.getElementById(id);if(!detail)continue;
-      const entry=document.createElement('button');entry.type='button';entry.className='saved-trip-actions';entry.textContent='记一笔';
-      entry.onclick=()=>{window.switchView('06');open(null);form.elements.place.value=state.itinerary?.destination||'';};
-      detail.prepend(entry);
-    }
-    section.querySelector('#cancelMemory').onclick=()=>{form.hidden=true;};
-    section.querySelector('#accountLogout').onclick=async()=>{try{await request('/api/auth/logout',{method:'POST',body:'{}'});window.location.reload();}catch(error){status.textContent=error.message;}};
-    const removePhoto=document.createElement('button');removePhoto.type='button';removePhoto.textContent='移除照片';removePhoto.onclick=()=>{photo='';form.elements.photo.value='';status.textContent='照片已移除，保存后生效。';};form.elements.photo.after(removePhoto);
-    const note=document.createElement('p');note.textContent='照片会压缩保存，不替代原图备份。';form.elements.photo.closest('label').after(note);
-    const refresh=async()=>{
-      try {const records=await request('/api/memories');list.replaceChildren();
-        if(!records.length)list.textContent='留下这次旅行的第一段回忆。';
-        for(const record of records){const card=document.createElement('article');card.style.margin='24px 0';
-          if(record.photo){const image=document.createElement('img');image.src=record.photo;image.alt='你添加的旅行照片';image.style.maxWidth='100%';card.appendChild(image);}
-          const title=document.createElement('h4');title.textContent=`${record.date} · ${record.place}${record.draft?' · 草稿':''}`;
-          const text=document.createElement('p');text.textContent=record.text;
-          const edit=document.createElement('button');edit.textContent='编辑';edit.onclick=()=>open(record);
-          const remove=document.createElement('button');remove.textContent='删除';remove.onclick=async()=>{if(!confirm('删除这条回忆？此操作不能撤销。'))return;try{await request(`/api/memories/${record.id}/delete`,{method:'POST',body:'{}'});await refresh();}catch(error){status.textContent=error.message;}};
-          const download=document.createElement('button');download.textContent='下载 PNG';download.onclick=()=>exportMemoryImage(record).catch(()=>{status.textContent='图片导出失败，请重试。';});
-          card.append(title,text,edit,download,remove);list.appendChild(card);
-        }
-      }catch(error){status.textContent=error.message;}
+    // Memory creation UI is withdrawn; retain private records and account logout.
+    const page=document.getElementById('view-06');
+    if(!page||document.getElementById('accountLogout'))return;
+    const button=document.createElement('button');
+    button.id='accountLogout';button.type='button';button.className='saved-trip-actions';button.textContent='退出登录';
+    button.onclick=async()=>{
+      button.disabled=true;
+      try {await request('/api/auth/logout',{method:'POST',body:'{}'});window.location.reload();}
+      catch(error){toast(error.message);button.disabled=false;}
     };
-    form.onsubmit=async event=>{
-      event.preventDefault();const button=form.querySelector('button');button.disabled=true;status.textContent='正在保存…';
-      try{
-        const file=form.elements.photo.files[0];
-        if(file){if(file.size>10*1024*1024)throw new Error('请选择10MB以内的照片。');const bitmap=await createImageBitmap(file);const canvas=document.createElement('canvas');const ratio=Math.min(1,400/Math.max(bitmap.width,bitmap.height));canvas.width=Math.round(bitmap.width*ratio);canvas.height=Math.round(bitmap.height*ratio);canvas.getContext('2d').drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close();photo=canvas.toDataURL('image/jpeg',.65);if(photo.length>48000)throw new Error('照片压缩后仍过大，请裁切后重试。');}
-        await request('/api/memories',{method:'POST',body:JSON.stringify({id:editing,date:form.elements.date.value,place:form.elements.place.value,text:form.elements.text.value,photo,draft:form.elements.draft.checked})});form.hidden=true;status.textContent='已私密保存';await refresh();
-      }catch(error){status.textContent=error.message;}finally{button.disabled=false;}
-    };
-    refresh();
+    page.appendChild(button);
   }
 
   async function exportMemoryImage(record) {
