@@ -79,6 +79,31 @@
     label:has(input[name="pace"]:checked)::after { background:#fff; border:4px solid #164e5b; outline:2px solid #fff; }
     .interest-tag:focus-visible,.incident-btn:focus-visible,label:has(input[name="pace"]:focus-visible) { outline:3px solid #318697; outline-offset:3px; }
     .editable-surface { cursor: pointer; }
+    #workspaceContainer { background-color:#f7f5ef; }
+    .material-symbols-outlined { font-variation-settings:'FILL' 0,'wght' 350,'GRAD' 0,'opsz' 24; }
+    #view-02 h2,#view-03 h2,#view-06 h2 { font-size:clamp(27px,3vw,36px); letter-spacing:-.025em; line-height:1.35; }
+    #view-02 > div:first-child,#view-03 > div:first-child { border-bottom:0; }
+    [data-purpose="overview-metrics"] { gap:0; padding:8px 0 22px; border-bottom:1px solid #d6dfd8; }
+    [data-purpose="overview-metrics"] > div { border:0; box-shadow:none; border-radius:0; background:transparent; padding:12px; }
+    [data-purpose="overview-metrics"] > div > div:first-child { background:#e8eee8; color:#305e63; }
+    .trip-day-navigation { display:flex; gap:10px; overflow:auto; padding:4px 0 12px; }
+    .trip-day-navigation button { white-space:nowrap; min-height:44px; padding:10px 20px; border-radius:999px; background:#e9ede7; color:#36545a; font-size:15px; }
+    .trip-day-navigation button[aria-current] { background:#164e5b; color:white; }
+    .trip-day-navigation button:focus-visible { outline:3px solid #b96844; outline-offset:2px; }
+    .api-day-card { border:1px solid #d9e1da !important; box-shadow:none !important; border-radius:16px; }
+    .api-day-card > .p-4 { padding:24px; }
+    .api-day-card h4 { font-size:23px; line-height:1.4; }
+    .api-day-card p { font-size:15px; line-height:1.8; }
+    .api-day-card .font-mono { font-family:inherit; }
+    .api-day-card > .p-4 > div:last-child { flex-wrap:wrap; font-size:13px; line-height:1.7; }
+    #activityStream { position:relative; padding-left:34px; }
+    #activityStream::before { content:''; position:absolute; left:12px; top:24px; bottom:24px; width:1px; background:#bccbc5; }
+    .api-activity-card { position:relative; padding:24px !important; border:0 !important; box-shadow:none !important; border-radius:12px; }
+    .api-activity-card::before { content:attr(data-stop-number); position:absolute; left:-34px; top:24px; width:25px; height:25px; border-radius:50%; display:grid; place-items:center; background:#a75535; color:#fff; font-size:13px; }
+    .api-activity-card h4 { font-size:22px; line-height:1.4; }
+    .api-activity-card p { font-size:15px; line-height:1.8; }
+    .api-activity-card button { min-height:42px; }
+    @media(max-width:767px) { .api-activity-card { padding:18px !important; } .api-day-card > .p-4 { padding:18px; } .api-activity-card > div:first-child { flex-wrap:wrap; } }
     #view-01 { max-width:1160px; }
     #view-01 > div:first-child { border:0; padding-bottom:0; }
     #view-01 > div:first-child > span { display:none; }

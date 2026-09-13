@@ -931,6 +931,20 @@
     const days = itinerary.days || [];
     const primary = document.querySelector('#view-02 [data-purpose="overview-primary"]');
     if (primary) {
+      document.getElementById("tripDayNavigation")?.remove();
+      const dayNavigation = document.createElement("nav");
+      dayNavigation.id = "tripDayNavigation";
+      dayNavigation.className = "trip-day-navigation";
+      dayNavigation.setAttribute("aria-label", "选择要查看的旅行日期");
+      days.forEach(day => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = `第 ${day.id} 天`;
+        if (Number(day.id) === Number(state.activeDay)) button.setAttribute("aria-current", "true");
+        button.onclick = () => openItineraryDay(day.id);
+        dayNavigation.appendChild(button);
+      });
+      primary.parentElement.before(dayNavigation);
       primary.innerHTML = "";
       days.forEach((day, index) => {
         const isActive = Number(day.id) === Number(state.activeDay);
@@ -1144,6 +1158,7 @@
       const card = document.createElement("article");
       card.className = "api-activity-card bg-white rounded-xl border thin-border shadow-sm p-5 transition hover:shadow-md";
       card.id = `activity-card-${index + 1}`;
+      card.dataset.stopNumber = String(index + 1);
       const meta = document.createElement("div");
       meta.className = "flex items-center justify-between gap-3 text-xs font-mono";
       const stop = document.createElement("span");
