@@ -1,4 +1,35 @@
 /* Shared refinements: quiet surfaces, clear actions, and saved trips first. */
+#planeWindowOuter { width:min(420px,90vw); height:auto; aspect-ratio:580 / 800; }
+#windowViewport {
+ --window-aperture: inset(18.5% 17% 19% 18% round 15% 15% 20% 20%);
+ background: url('/assets/cabin-window.png') 48.78% 48.99% / 128.28% 174% no-repeat;
+ mask-image: linear-gradient(transparent,#000 7%,#000 92%,transparent);
+}
+#windowViewport::before, #windowViewport::after { display:none; }
+#windowViewport #skyDayBg { background-image:url('/assets/cloudscape.png') !important; background-size:auto 105% !important; animation:sky-pan 40s ease-in-out infinite alternate; }
+#windowViewport[data-weather="cloud"] #skyDayBg { filter:saturate(.45) brightness(.84); }
+#windowViewport[data-weather="rain"] #skyDayBg { background-image:linear-gradient(#344c6799,#53677b88),url('/assets/cloudscape.png') !important; filter:saturate(.35); }
+#windowViewport[data-weather="fog"] #skyDayBg { background-image:linear-gradient(#e1e7e4c9,#d7dfdedb),url('/assets/cloudscape.png') !important; }
+#windowViewport[data-weather="snow"] #skyDayBg { background-image:linear-gradient(#c3d2e487,#d8e3eb99),url('/assets/cloudscape.png') !important; filter:saturate(.35); }
+#windowViewport[data-weather="sun"] #skyDayBg::after { display:none; }
+#windowViewport #skyNightBg { background-image:linear-gradient(#0c1b32cc,#183249bb),url('/assets/cloudscape.png') !important; }
+#windowViewport #skyDayBg::before, #windowViewport #skyNightBg::before { content:'';position:absolute;inset:0;opacity:0;pointer-events:none; }
+#windowViewport[data-weather="rain"] #skyDayBg::before, #windowViewport[data-weather="rain"] #skyNightBg::before {
+ opacity:.55;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='46' height='70'%3E%3Cpath d='M12 4l-4 15M38 40l-4 15' stroke='%23dae6f2' stroke-width='1.2'/%3E%3C/svg%3E");animation:window-rain 850ms linear infinite;
+}
+#windowViewport[data-weather="snow"] #skyDayBg::before, #windowViewport[data-weather="snow"] #skyNightBg::before {
+ opacity:.85;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='70' height='90'%3E%3Ccircle cx='14' cy='10' r='2' fill='white'/%3E%3Ccircle cx='47' cy='55' r='1.5' fill='white'/%3E%3C/svg%3E");animation:window-snow 5s linear infinite;
+}
+#windowWeatherBadge { top:30%;left:24%;right:24%;color:#15394b; }
+#windowWeatherBadge strong { font-size:48px; }
+#windowDestinationLabel { bottom:5%;color:#304e62; }
+#windowShade { background:linear-gradient(100deg,#adb9c5,#e0e6eb 50%,#acb9c6);clip-path:inset(0 0 18%); }
+#windowShadeGrip { bottom:22%; }
+#windowShade::after { color:#738796; }
+@keyframes window-rain { to { background-position:-12px 70px; } }
+@keyframes window-snow { to { background-position:20px 90px; } }
+.hidden #windowViewport *, .hidden #windowViewport *::before { animation-play-state:paused !important; }
+@media(prefers-reduced-motion:reduce) { #windowViewport *,#windowViewport *::before { animation:none !important; } }
 ::selection { background: #c3dfd3; color: #153b40; }
 input, textarea { caret-color: #19665f; }
 button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px solid #367d75; outline-offset: 4px; }
