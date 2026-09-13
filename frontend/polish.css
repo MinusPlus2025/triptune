@@ -105,9 +105,14 @@
 #planeWindowOuter { width:min(420px,90vw); height:auto; aspect-ratio:580 / 800; }
 #windowViewport {
  --window-aperture: inset(18.5% 17% 19% 18% round 15% 15% 20% 20%);
- background: url('/assets/cabin-window.png') 48.78% 48.99% / 128.28% 174% no-repeat;
- mask-image: linear-gradient(transparent,#000 7%,#000 92%,transparent);
+ background: url('/assets/cabin-window-cutout.png') 48.78% 48.99% / 128.28% 174% no-repeat;
+ mask-image: none;
+ filter: brightness(var(--cabin-frame-light,1));
+ transition: filter 520ms cubic-bezier(.16,1,.3,1);
 }
+#windowViewport #windowShade, #windowViewport .window-shade-track::before { filter:none; }
+.cabin-dragging #windowViewport { transition:none; }
+@media(prefers-reduced-motion:reduce) { #windowViewport { transition:none; } }
 #windowViewport::before, #windowViewport::after { display:none; }
 #windowViewport #skyDayBg { background-image:url('/assets/cloudscape.png') !important; background-size:auto 105% !important; animation:sky-pan 40s ease-in-out infinite alternate; }
 #windowViewport[data-weather="cloud"] #skyDayBg { filter:saturate(.45) brightness(.84); }
