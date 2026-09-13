@@ -8,3 +8,9 @@ window.tripTuneCityImages = {
   "广州": { src: "/assets/cities/guangzhou.jpg", author: "Tim Wu", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/wiki/File:Canton_Tower_20241027.jpg" },
   "南京": { src: "/assets/cities/nanjing.jpg", author: "xiquinhosilva", license: "CC BY 2.0", source: "https://commons.wikimedia.org/wiki/File:Nanjing_CBD_from_City_Wall.jpg" }
 };
+
+// Exact city + place title only. Never fall back to a category or city image.
+window.tripTunePlaceImages = {
+  "北京|UCCA 尤伦斯当代艺术中心": {src:"/assets/places/ucca.jpg", caption:"UCCA 尤伦斯当代艺术中心外观 · 2012年", author:"Ullens Center for Contemporary Art", license:"CC0 1.0", source:"https://commons.wikimedia.org/wiki/File:Ullens_Center_for_Contemporary_Art_(UCCA).jpg"},
+  "杭州|天目里建筑与设计漫游": {src:"/assets/places/tianmuli.jpg", caption:"天目里园区实景 · 2026年", author:"Takashishin", license:"CC BY 4.0", source:"https://commons.wikimedia.org/wiki/File:Tianmuli.jpg"}
+};

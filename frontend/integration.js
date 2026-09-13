@@ -949,18 +949,28 @@
 
   function createCityCover(destination) {
     const photo = window.tripTuneCityImages?.[destination];
+    return createPhotoCover(photo, `${destination}城市风景（非当天景点照片）`, `${destination}城市风景`);
+  }
+
+  function createPlaceCover(activity) {
+    const key = `${state.itinerary?.destination || ""}|${activity?.title || ""}`;
+    const photo = window.tripTunePlaceImages?.[key];
+    return createPhotoCover(photo, photo?.caption, photo?.caption);
+  }
+
+  function createPhotoCover(photo, alt, label) {
     if (!photo) return null;
     const figure = document.createElement("figure");
     figure.className = "city-cover";
     // Reveal only a successfully loaded image. Failed assets never reserve space.
     figure.hidden = true;
     const img = document.createElement("img");
-    img.alt = `${destination}城市风景（非当天景点照片）`;
+    img.alt = alt;
     img.decoding = "async";
     img.onload = () => { figure.hidden = false; };
     img.onerror = () => { figure.remove(); };
     const caption = document.createElement("figcaption");
-    caption.append(`${destination}城市风景 · `);
+    caption.append(`${label} · `);
     const credit = document.createElement("a");
     credit.href = photo.source;
     credit.target = "_blank";
@@ -1038,7 +1048,7 @@
         weather.textContent = day.weather || "按当天路线更新";
         footer.append(activities, weather);
         body.append(top, title, desc, footer);
-        const cover = createCityCover(itinerary.destination);
+        const cover = createPlaceCover(firstActivity);
         if (cover) card.appendChild(cover);
         card.appendChild(body);
         primary.appendChild(card);
@@ -1267,6 +1277,8 @@
         buttons.appendChild(button);
       });
       feedbackBar.append(feedbackPrompt, buttons);
+      const placePhoto = createPlaceCover(node);
+      if (placePhoto) card.appendChild(placePhoto);
       card.append(meta, heading, route, feedbackBar);
       stream.appendChild(card);
     });
