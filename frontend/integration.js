@@ -424,7 +424,7 @@
       detail.querySelector("span:last-child")?.setAttribute("id", fieldIds[index]);
     });
 
-    // Original short sliding texture and a two-note open/close signature.
+    // Procedural mechanical sounds: friction, a damped latch, and a soft release.
     let audioContext;
     let audioSource;
     const tones = new Set();
@@ -433,19 +433,28 @@
       settle(closed) {
         if (!audioContext || muted || document.hidden) return;
         const now = audioContext.currentTime;
-        (closed ? [440, 330] : [330, 440]).forEach((frequency, index) => {
-          const tone = audioContext.createOscillator();
+        {
+          const tone = audioContext.createBufferSource();
           const envelope = audioContext.createGain();
-          const start = now + index * 0.11;
-          tone.type = "sine"; tone.frequency.value = frequency;
-          envelope.gain.setValueAtTime(0, start);
-          envelope.gain.linearRampToValueAtTime(0.022, start + 0.018);
-          envelope.gain.exponentialRampToValueAtTime(0.0001, start + 0.28);
+          const start = now;
+          const duration = closed ? 0.13 : 0.2;
+          const buffer = audioContext.createBuffer(1, Math.ceil(audioContext.sampleRate * duration), audioContext.sampleRate);
+          const samples = buffer.getChannelData(0);
+          let smooth = 0;
+          for (let i = 0; i < samples.length; i++) {
+            const t = i / audioContext.sampleRate;
+            smooth = smooth * 0.85 + (Math.random() * 2 - 1) * 0.15;
+            samples[i] = closed
+              ? (smooth * 0.5 + Math.sin(2 * Math.PI * 95 * t) * 0.3) * Math.exp(-t * 48) * Math.min(1, t * 1000)
+              : smooth * Math.sin(Math.PI * t / duration) * Math.exp(-t * 9);
+          }
+          tone.buffer = buffer;
+          envelope.gain.value = closed ? 0.12 : 0.09;
           tone.connect(envelope).connect(audioContext.destination);
           tones.add(tone);
           tone.onended = () => { tones.delete(tone); tone.disconnect(); envelope.disconnect(); };
-          tone.start(start); tone.stop(start + 0.3);
-        });
+          tone.start(start); tone.stop(start + duration);
+        }
       },
       async play() {
         const AudioEngine = window.AudioContext || window.webkitAudioContext;
