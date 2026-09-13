@@ -1,0 +1,32 @@
+/* Shared refinements: quiet surfaces, clear actions, and saved trips first. */
+::selection { background: #c3dfd3; color: #153b40; }
+input, textarea { caret-color: #19665f; }
+button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px solid #367d75; outline-offset: 4px; }
+button:disabled { cursor: wait; opacity: .6; }
+#view-06 .personal-identity { background: #e7efea; }
+.personal-identity > div { display: grid; grid-template-columns: 64px 1fr; column-gap: 16px; align-items: center; }
+#personalAvatar { grid-row: 1 / 3; margin-bottom: 0 !important; background: #fff !important; }
+.personal-identity p { max-width: 220px; line-height: 1.6; }
+#personalEdit { min-height: 44px; }
+#personalTrips { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px; }
+.saved-trip-entry { overflow: hidden; border-radius: 14px; background: white; }
+.saved-trip-entry .city-cover { margin: 0; }
+.saved-trip-entry .city-cover img { height: 170px; width: 100%; object-fit: cover; }
+.saved-trip-open { min-height: 100px; align-content: center; }
+.saved-trip-open strong { font-size: 21px; color: #173f43; }
+.saved-trip-open span { display: block; width: 100%; }
+.saved-trip-open:hover { background: #eaf2ed; }
+.personal-preferences > section { background: transparent; border: 0; border-top: 1px solid #d9dfd8; border-radius: 0; padding: 24px 0; }
+.destination-gallery button, .saved-trip-open { transition: background-color 180ms ease-out, transform 180ms ease-out; }
+.destination-gallery button:active, .saved-trip-open:active { transform: scale(.98); }
+@media(max-width:767px) {
+ #personalTrips { grid-template-columns: 1fr; }
+ .personal-identity { gap: 12px; }
+ #personalEdit { width: 100%; background: transparent; color: #174f4c; border: 1px solid #8aada1; }
+ #view-06 header p { max-width: 30ch; line-height: 1.7; }
+ .saved-trip-entry .city-cover img { height: 145px; }
+ #view-06 .personal-preferences { gap: 0; }
+}
+@media(prefers-reduced-motion:reduce) {
+ .destination-gallery button, .saved-trip-open { transition: none; }
+}

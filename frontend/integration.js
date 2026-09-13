@@ -1016,7 +1016,7 @@
         top.className = "flex items-center justify-between gap-3";
         const badge = document.createElement("span");
         badge.className = `text-[10px] font-mono font-bold ${isActive ? "text-brand-700 bg-brand-50" : "text-slate-600 bg-slate-100"} px-2 py-0.5 rounded`;
-        badge.textContent = `DAY ${String(day.id).padStart(2, "0")}${isActive ? " · 正在查看" : ""}`;
+        badge.textContent = `DAY ${String(day.id).padStart(2, "0")}`;
         const firstActivity = day.activityDetails?.[0];
         const meta = document.createElement("span");
         meta.className = "text-[11px] text-slate-500 font-mono text-right";
@@ -1802,17 +1802,18 @@
     page.className = "hidden max-w-5xl mx-auto space-y-6";
     page.innerHTML = `
       <header><h2 class="text-2xl font-bold text-slate-900">我的旅行</h2><p class="mt-2 text-sm text-slate-600">管理你的偏好，也随时接着上一次的旅程出发。</p></header>
-      <div class="bg-white rounded-xl border thin-border p-5 sm:p-6 flex flex-wrap items-center justify-between gap-4">
+      <div class="personal-identity bg-white rounded-xl p-5 sm:p-6 flex flex-wrap items-center justify-between gap-4">
         <div><div id="personalAvatar" style="width:64px;height:64px;border-radius:50%;overflow:hidden;background:#e5eff0;display:grid;place-items:center;margin-bottom:12px"></div><h3 id="personalName" class="text-xl font-semibold text-brand-800">正在读取资料…</h3><p class="mt-2 text-xs text-slate-500">共享体验档案，请勿填写个人隐私</p></div>
         <button id="personalEdit" class="px-4 py-2.5 rounded-lg bg-brand-700 text-white text-sm font-semibold">编辑资料与偏好</button>
       </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="personal-preferences grid grid-cols-1 md:grid-cols-2 gap-6">
         <section class="bg-white rounded-xl border thin-border p-5"><h3 class="text-base font-semibold">我的旅行偏好</h3><dl class="mt-4 space-y-4 text-sm"><div><dt class="text-slate-500">常用预算</dt><dd id="personalBudget" class="mt-1 font-semibold"></dd></div><div><dt class="text-slate-500">旅行节奏</dt><dd id="personalPace" class="mt-1"></dd></div><div><dt class="text-slate-500">长期兴趣</dt><dd id="personalInterests" class="mt-2 flex flex-wrap gap-2"></dd></div></dl></section>
         <section class="bg-white rounded-xl border thin-border p-5"><h3 class="text-base font-semibold">我的反馈</h3><p class="mt-2 text-sm text-slate-500">你的选择会参与下一次旅行推荐。</p><div id="personalFeedback" class="mt-4 space-y-3 text-sm"></div></section>
       </div>
-      <section><div class="flex items-center justify-between gap-3"><h3 class="text-lg font-semibold">已保存的旅程</h3><button id="personalNewTrip" class="text-sm font-semibold text-brand-700">规划新旅程 →</button></div><div id="personalTrips" class="mt-4 bg-white rounded-xl border thin-border divide-y divide-slate-100"></div></section>
+      <section class="personal-journeys"><div class="flex items-center justify-between gap-3"><h3 class="text-lg font-semibold">已保存的旅程</h3><button id="personalNewTrip" class="text-sm font-semibold text-brand-700">规划新旅程 →</button></div><div id="personalTrips" class="mt-4"></div></section>
       <p id="personalError" role="status" class="text-sm text-red-700"></p>`;
     document.getElementById("view-05")?.after(page);
+    page.querySelector(".personal-preferences").before(page.querySelector(".personal-journeys"));
     document.getElementById("personalEdit").onclick = openProfileEditor;
     document.getElementById("personalNewTrip").onclick = () => window.switchView("01");
   }
@@ -1845,7 +1846,7 @@
       list.replaceChildren();
       for (const trip of trips) {
         const row = document.createElement("button");
-        row.className = "w-full p-5 flex flex-wrap items-center justify-between gap-3 text-left hover:bg-slate-50 transition";
+        row.className = "saved-trip-open w-full p-5 flex flex-wrap items-center justify-between gap-3 text-left transition";
         const title = document.createElement("strong"); title.textContent = `${trip.destination} · ${trip.durationDays}天`;
         const meta = document.createElement("span"); meta.className = "text-xs text-slate-500"; meta.textContent = `${new Date(trip.createdAt).toLocaleDateString("zh-CN")} 保存 · 查看旅程 →`;
         row.append(title, meta);
@@ -1855,7 +1856,12 @@
           catch (error) { setText("#personalError", `旅程加载失败：${error.message}`); }
           finally { row.disabled = false; }
         };
-        list.appendChild(row);
+        const entry = document.createElement("article");
+        entry.className = "saved-trip-entry";
+        const cover = createCityCover(trip.destination);
+        if (cover) entry.appendChild(cover);
+        entry.appendChild(row);
+        list.appendChild(entry);
       }
       if (!trips.length) { const empty = document.createElement("p"); empty.className = "p-5 text-sm text-slate-500"; empty.textContent = "还没有保存的旅程。填写规划旅行，开始第一段旅行。"; list.appendChild(empty); }
     } catch (error) {
