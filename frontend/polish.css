@@ -72,7 +72,8 @@
 }
 #windowWeatherBadge { top:30%;left:24%;right:24%;color:#15394b; }
 #windowWeatherBadge strong { font-size:48px; }
-#windowDestinationLabel { bottom:5%;color:#304e62; }
+#windowDestinationLabel { bottom:25%;left:22%;right:22%;z-index:12;color:#203f50;font-size:14px;text-shadow:0 1px 5px #ffffffd9; }
+#windowViewport[data-weather-night="true"] #windowDestinationLabel { color:#fff5dc;text-shadow:0 1px 5px #102538; }
 #windowShade { background:linear-gradient(100deg,#adb9c5,#e0e6eb 50%,#acb9c6);clip-path:inset(0 0 18%); }
 #windowShadeGrip { bottom:22%; }
 #windowShade::after { color:#738796; }

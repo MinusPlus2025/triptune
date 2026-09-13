@@ -403,7 +403,7 @@
       const temperature = document.createElement("strong"); temperature.textContent = `${Math.round(data.temperature_2m)}°`;
       const label = document.createElement("span"); label.textContent = `${city} · ${labels[kind]}`;
       badge.append(icon,temperature,label);
-      badge.title = `Open-Meteo · ${data.time} · °C`;
+      badge.title = `${data.time} 更新 · °C`;
       document.getElementById("skyDayBg").style.opacity = data.is_day ? "1" : "0";
       document.getElementById("skyNightBg").style.opacity = data.is_day ? "0" : "1";
     } catch {
@@ -576,7 +576,7 @@
     document.getElementById("planeWindowOuter").after(muteButton);
     const weatherSource = document.createElement("a");
     weatherSource.href = "https://open-meteo.com/"; weatherSource.target = "_blank"; weatherSource.rel = "noopener";
-    weatherSource.textContent = "天气 · Open-Meteo";
+    weatherSource.textContent = "天气来源";
     weatherSource.className = "text-xs text-slate-500 underline";
     muteButton.after(weatherSource);
     const playShade = () => {
