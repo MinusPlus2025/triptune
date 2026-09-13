@@ -6,7 +6,7 @@ async function getAmapWeather(city) {
   const url = new URL("https://restapi.amap.com/v3/weather/weatherInfo");
   url.search = new URLSearchParams({key:process.env.AMAP_API_KEY.trim(),city:adcodes[city],extensions:"base",output:"JSON"});
   const response = await fetch(url, {signal:AbortSignal.timeout(6000)});
-  if (!response.ok) throw new Error("高德天气请求失败");
+  if (!response.ok) throw new Error(`AMAP_HTTP_${response.status}`);
   const data = await response.json();
   if (data.status !== "1") {
     const code = /^\d{5}$/.test(data.infocode) ? data.infocode : "unknown";
@@ -20,7 +20,7 @@ async function getAmapWeather(city) {
   if (Math.abs(Date.now()-observed)>3*3600000) throw new Error("AMAP_DATA_STALE");
   const description = live.weather || "";
   const code = /雪/.test(description) ? 73 : /雨|雷/.test(description) ? 61 : /雾|霾|沙|尘/.test(description) ? 45 : /阴/.test(description) ? 3 : /云/.test(description) ? 2 : description === "晴" ? 0 : null;
-  if (code === null) throw new Error("暂不支持的天气状态");
+  if (code === null) throw new Error("AMAP_WEATHER_UNKNOWN");
   // Approximate daylight is only used for the decorative sky, not weather data.
   const hour = Number(new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Shanghai",hour:"2-digit",hourCycle:"h23"}).format(new Date()));
   return {city,current:{temperature_2m:temperature,weather_code:code,is_day:Number(hour>=6 && hour<18),time},source:"高德天气",fetchedAt:Date.now()};
@@ -51,8 +51,10 @@ export async function getWeather(city) {
         return result;
       } catch (error) {
         if (attempt === 1) {
-          const reason = /^AMAP_(API_\d{5}|API_unknown|DATA_INVALID|DATA_STALE)$/.test(error.message) ? error.message : error.name === "TimeoutError" ? "TIMEOUT" : "WEATHER_REQUEST_FAILED";
+          const reason = /^AMAP_(API_\d{5}|API_unknown|HTTP_\d{3}|DATA_INVALID|DATA_STALE|WEATHER_UNKNOWN)$/.test(error.message) ? error.message : error.name === "TimeoutError" ? "TIMEOUT" : "WEATHER_REQUEST_FAILED";
           console.warn("[weather]", process.env.AMAP_API_KEY?.trim() ? "amap" : "open-meteo", reason);
+          const safeCode = /^[A-Z_]{2,50}$/.test(error.cause?.code || "") ? error.cause.code : "none";
+          console.warn("[weather]", "error-type", ["TypeError","SyntaxError","Error"].includes(error.name) ? error.name : "other", "network-code", safeCode);
           throw error;
         }
       }
