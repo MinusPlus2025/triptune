@@ -238,6 +238,16 @@ button:disabled { cursor: wait; opacity: .6; }
 .planning-chat button { padding:12px 20px;min-height:44px;border-radius:24px;background:#234944;color:#fffdf7;margin-top:12px; }
 .planning-chat button:disabled { opacity:.55;cursor:wait; }
 .planning-chat button[hidden] { display:none; }
+dialog.planning-chat { margin:auto;width:min(520px,calc(100% - 32px));max-height:90dvh;overflow:auto;padding:28px;background:#fffdf7;border:0;border-radius:16px;box-shadow:0 16px 60px #123b4433; }
+dialog.planning-chat::backdrop { background:#102f3866; }
+.planning-chat input:not([type=checkbox]):not([type=file]) { display:block;width:100%;box-sizing:border-box;padding:12px;font-size:16px;color:#234944;background:#fffdf7;border:1px solid #829d93;border-radius:8px;margin-top:6px; }
+#memoryForm { margin-top:24px;max-width:640px; }
+#memoryForm[hidden] { display:none; }
+#memoryList { display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:24px; }
+#memoryList article { min-width:0;overflow-wrap:anywhere;border-bottom:1px solid #cad6cf;padding-bottom:24px; }
+#memoryList article p { white-space:pre-wrap;line-height:1.7; }
+#memoryList img { width:100%;max-height:320px;object-fit:contain;background:#eeeae1; }
+#privateMemories button + button,dialog.planning-chat button + button { margin-left:8px; }
 .planning-chat :focus-visible { outline:3px solid #b85e38;outline-offset:3px; }
 .planning-privacy { font-size:12px;line-height:1.6;color:#50635e;margin-top:10px; }
 #planningReply { margin-top:16px;line-height:1.8; }

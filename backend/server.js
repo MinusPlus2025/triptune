@@ -1,4 +1,5 @@
 import http from "node:http";
+import { accountFor, login, logout, listMemories, saveMemory, deleteMemory } from "./accounts.js";
 import { proposeTrip } from "./planning-assistant.js";
 import { getWeather } from "./weather.js";
 import { readFile } from "node:fs/promises";
@@ -51,6 +52,8 @@ const contentTypes = {
 
 const allowedPaces = new Set(["relaxed", "balanced", "dense"]);
 const allowedIncidents = new Set(["rain", "delay", "cancel", "traffic"]);
+let authWindow = 0;
+let authAttempts = 0;
 
 function json(res, status, payload) {
   res.writeHead(status, {
@@ -75,7 +78,10 @@ async function parseBody(req) {
   }
   if (!chunks.length) return {};
   try {
-    return JSON.parse(Buffer.concat(chunks).toString("utf8"));
+    const body = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+    if (req.account) body.profileId = req.account.profile_id;
+    if (req.account && body.itineraryId && getItineraryById(body.itineraryId)?.profileId !== req.account.profile_id) throw new Error("invalid_json");
+    return body;
   } catch {
     throw Object.assign(new Error("invalid_json"), { status: 400 });
   }
@@ -137,6 +143,42 @@ function ensureLatestItinerary(profileId) {
 }
 
 async function api(req, res, pathname) {
+  res.setHeader('Cache-Control','no-store');
+  if (req.method === "POST" && !String(req.headers["content-type"] || "").startsWith("application/json")) return apiError(res,415,"content_type","请使用 JSON 请求。");
+  if (req.method === "POST" && req.headers["sec-fetch-site"] === "cross-site") return apiError(res,403,"forbidden","不允许跨站请求。");
+  const account = accountFor(req);
+  if (pathname === "/api/auth/me") return account ? json(res,200,{profileId:account.profile_id,username:account.username}) : apiError(res,401,"login_required","请先登录。");
+  if (req.method === "POST" && ["/api/auth/login","/api/auth/register"].includes(pathname)) {
+    if(Date.now()-authWindow>60000){authWindow=Date.now();authAttempts=0;}
+    if(++authAttempts>20)return apiError(res,429,"rate_limit","尝试过于频繁，请一分钟后重试。");
+    const body=await parseBody(req);
+    try {
+      const result=login(body.username,body.password,pathname.endsWith("register"));
+      res.setHeader("Set-Cookie",`triptune_session=${result.token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=604800${process.env.NODE_ENV === "production" ? "; Secure" : ""}`);
+      return json(res,200,{profileId:result.profileId});
+    } catch { return apiError(res,400,"auth_failed","无法登录或注册。检查用户名、密码（至少10位），或换一个用户名。"); }
+  }
+  if (req.method === "POST" && pathname === "/api/auth/logout") {
+    logout(req);res.setHeader("Set-Cookie","triptune_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0");return json(res,200,{ok:true});
+  }
+  const publicRead=req.method === "GET" && (pathname === "/api/health" || pathname === "/api/destinations" || pathname.startsWith("/api/weather/"));
+  if (!publicRead) {
+    if (!account) return apiError(res,401,"login_required","请先登录。");
+    req.account=account;
+    const scoped=pathname.match(/^\/api\/(?:profiles|keepsake)\/([^/]+)/);
+    if(scoped && scoped[1]!==account.profile_id)return apiError(res,404,"not_found","找不到记录。");
+    const trip=pathname.match(/^\/api\/itineraries\/([^/]+)$/);
+    if(trip && trip[1]!==account.profile_id && getItineraryById(trip[1])?.profileId!==account.profile_id)return apiError(res,404,"not_found","找不到记录。");
+    if(pathname==="/api/profiles")return json(res,200,[getProfile(account.profile_id)]);
+    if(pathname==="/api/demo/reset")return apiError(res,403,"forbidden","该操作已关闭。");
+  }
+  if(pathname==="/api/memories" && req.method==="GET")return json(res,200,listMemories(account.id));
+  if(pathname==="/api/memories" && req.method==="POST") {
+    const body=await parseBody(req);
+    try { return json(res,200,{id:saveMemory(account.id,body)}); } catch {return apiError(res,422,"invalid_memory","保存失败，请检查日期、文字和照片大小。");}
+  }
+  const memory=pathname.match(/^\/api\/memories\/([a-f0-9-]+)\/delete$/);
+  if(memory && req.method==="POST")return deleteMemory(account.id,memory[1])?json(res,200,{ok:true}):apiError(res,404,"not_found","找不到记录。");
   if (req.method === "POST" && pathname === "/api/planning/interpret") {
     const body = await parseBody(req);
     try { return json(res, 200, await proposeTrip(body.message)); }
@@ -211,7 +253,7 @@ async function api(req, res, pathname) {
     const input = await parseBody(req);
     const name = cleanText(input.name,60);
     if (!["rename","delete","restore"].includes(input.action) || (input.action === "rename" && !name)) return apiError(res,400,"invalid_action","请填写旅程名称");
-    // Shared demo profile ownership check, not private-account authentication.
+    // Identity is resolved from the server session, never the submitted profile.
     return manageItinerary(itineraryMatch[1],cleanText(input.profileId,48),input.action,name)
       ? json(res,200,{ok:true}) : apiError(res,404,"not_found","找不到旅程");
   }

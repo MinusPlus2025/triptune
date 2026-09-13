@@ -1678,15 +1678,7 @@
   }
 
   async function toggleTravelerFromApi() {
-    const next = state.profileId === "demo-linmo" ? "demo-zhouye" : "demo-linmo";
-    try {
-      await loadProfileAndItinerary(next);
-      window.localStorage.setItem("triptune-profile", next);
-      closeProfileEditor();
-      toast(`已切换到：${state.profile?.name || next}`);
-    } catch (error) {
-      toast("暂时无法切换档案，请稍后重试");
-    }
+    toast('请在「我 → 旅行回忆」退出登录后切换账号。');
   }
 
   async function selectIncidentFromApi(eventOrType, maybeType) {
@@ -2105,7 +2097,7 @@
           try { await manage("rename",name.trim()); await renderPersonalPage(); } catch { toast("修改失败，请重试"); }
         };
         remove.onclick = async () => {
-          if (!window.confirm("从已保存旅程中删除？当前是共享体验档案，其他使用者也会看到此修改。")) return;
+          if (!window.confirm("从你已保存的旅程中删除？")) return;
           try {
             await manage("delete"); entry.replaceChildren();
             const undo = document.createElement("button"); undo.type="button";undo.className="saved-trip-actions";undo.textContent="已删除 · 撤销";
@@ -2140,13 +2132,91 @@
     patchHandlers();
     setupWindowExperience();
     try {
+      const session = await request("/api/auth/me");
+      state.profileId = session.profileId;
+      document.getElementById('switchProfileTraveler')?.remove();
+      document.querySelectorAll('[aria-label="切换旅行者"]').forEach(node=>node.remove());
+      document.querySelectorAll('[data-i18n="demoNotice"]').forEach(node=>{node.removeAttribute('data-i18n');node.textContent='你的旅程与回忆，默认私密';});
+      document.querySelectorAll('#view-06 p').forEach(p=>{if(p.textContent.includes('共享体验档案'))p.textContent='你的资料与旅程，仅自己可见。';});
+      setupPrivateMemories();
       await loadDestinations();
       await loadProfileAndItinerary(state.profileId);
     } catch (error) {
+      if(error.status===401){showAccountLogin();return;}
       // A disconnected API is an empty/error state, never permission to show
       // stale illustrative itinerary data from the design export.
       clearItineraryViews();
       toast("无法连接旅程服务，请确认后端已启动后重试");
     }
   });
+
+  function showAccountLogin() {
+    const dialog=document.createElement("dialog");dialog.className="planning-chat";
+    dialog.innerHTML='<h3>登录 TripTune</h3><p>新账号从空白旅程开始，回忆仅自己可见。</p><form><label>用户名（字母、数字或下划线）<input name="username" autocomplete="username" required minlength="3" maxlength="30"></label><label>密码（至少10位）<input name="password" type="password" autocomplete="current-password" required minlength="10" maxlength="128"></label><p role="status"></p><button name="login" type="submit">登录</button><button name="register" type="submit">注册新账号</button></form>';
+    document.body.appendChild(dialog);dialog.showModal();
+    dialog.addEventListener('cancel',event=>event.preventDefault());
+    dialog.querySelector('form').onsubmit=async event=>{
+      event.preventDefault();const form=event.currentTarget;const action=event.submitter?.name==='register'?'register':'login';
+      const buttons=[...form.querySelectorAll('button')];buttons.forEach(b=>b.disabled=true);
+      try {await request(`/api/auth/${action}`,{method:'POST',body:JSON.stringify({username:form.elements.username.value,password:form.elements.password.value})});window.location.reload();}
+      catch(error){form.querySelector('[role=status]').textContent=error.message;buttons.forEach(b=>b.disabled=false);}
+    };
+  }
+
+  function setupPrivateMemories() {
+    const page=document.getElementById('view-06');if(!page||document.getElementById('privateMemories'))return;
+    const section=document.createElement('section');section.id='privateMemories';section.className='planning-chat';
+    section.innerHTML='<h3>旅行回忆</h3><p>仅自己可见，不发送给 AI。</p><button type="button" id="newMemory">记一笔</button><button type="button" id="accountLogout">退出登录</button><form hidden id="memoryForm"><label>日期<input type="date" name="date" required></label><label>地点<input name="place" maxlength="100"></label><label>写点什么<textarea name="text" maxlength="2000" rows="4"></textarea></label><label>添加照片<input type="file" accept="image/jpeg,image/png,image/webp" name="photo"></label><label><input type="checkbox" name="draft">先存为草稿</label><button type="submit">保存</button><button type="button" id="cancelMemory">取消</button></form><p id="memoryStatus" role="status"></p><div id="memoryList"></div>';
+    page.appendChild(section);
+    const form=section.querySelector('form'),status=section.querySelector('#memoryStatus'),list=section.querySelector('#memoryList');
+    let editing=null,photo='';
+    const open=record=>{editing=record?.id||null;photo=record?.photo||'';form.reset();form.elements.date.value=record?.date||new Date().toLocaleDateString('en-CA');form.elements.place.value=record?.place||'';form.elements.text.value=record?.text||'';form.elements.draft.checked=!!record?.draft;form.hidden=false;form.elements.text.focus();};
+    section.querySelector('#newMemory').onclick=()=>open(null);
+    section.querySelector('#cancelMemory').onclick=()=>{form.hidden=true;};
+    section.querySelector('#accountLogout').onclick=async()=>{try{await request('/api/auth/logout',{method:'POST',body:'{}'});window.location.reload();}catch(error){status.textContent=error.message;}};
+    const removePhoto=document.createElement('button');removePhoto.type='button';removePhoto.textContent='移除照片';removePhoto.onclick=()=>{photo='';form.elements.photo.value='';status.textContent='照片已移除，保存后生效。';};form.elements.photo.after(removePhoto);
+    const note=document.createElement('p');note.textContent='照片会压缩保存，不替代原图备份。';form.elements.photo.closest('label').after(note);
+    const refresh=async()=>{
+      try {const records=await request('/api/memories');list.replaceChildren();
+        if(!records.length)list.textContent='留下这次旅行的第一段回忆。';
+        for(const record of records){const card=document.createElement('article');card.style.margin='24px 0';
+          if(record.photo){const image=document.createElement('img');image.src=record.photo;image.alt='你添加的旅行照片';image.style.maxWidth='100%';card.appendChild(image);}
+          const title=document.createElement('h4');title.textContent=`${record.date} · ${record.place}${record.draft?' · 草稿':''}`;
+          const text=document.createElement('p');text.textContent=record.text;
+          const edit=document.createElement('button');edit.textContent='编辑';edit.onclick=()=>open(record);
+          const remove=document.createElement('button');remove.textContent='删除';remove.onclick=async()=>{if(!confirm('删除这条回忆？此操作不能撤销。'))return;try{await request(`/api/memories/${record.id}/delete`,{method:'POST',body:'{}'});await refresh();}catch(error){status.textContent=error.message;}};
+          const download=document.createElement('button');download.textContent='下载 PNG';download.onclick=()=>exportMemoryImage(record).catch(()=>{status.textContent='图片导出失败，请重试。';});
+          card.append(title,text,edit,download,remove);list.appendChild(card);
+        }
+      }catch(error){status.textContent=error.message;}
+    };
+    form.onsubmit=async event=>{
+      event.preventDefault();const button=form.querySelector('button');button.disabled=true;status.textContent='正在保存…';
+      try{
+        const file=form.elements.photo.files[0];
+        if(file){if(file.size>10*1024*1024)throw new Error('请选择10MB以内的照片。');const bitmap=await createImageBitmap(file);const canvas=document.createElement('canvas');const ratio=Math.min(1,400/Math.max(bitmap.width,bitmap.height));canvas.width=Math.round(bitmap.width*ratio);canvas.height=Math.round(bitmap.height*ratio);canvas.getContext('2d').drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close();photo=canvas.toDataURL('image/jpeg',.65);if(photo.length>48000)throw new Error('照片压缩后仍过大，请裁切后重试。');}
+        await request('/api/memories',{method:'POST',body:JSON.stringify({id:editing,date:form.elements.date.value,place:form.elements.place.value,text:form.elements.text.value,photo,draft:form.elements.draft.checked})});form.hidden=true;status.textContent='已私密保存';await refresh();
+      }catch(error){status.textContent=error.message;}finally{button.disabled=false;}
+    };
+    refresh();
+  }
+
+  async function exportMemoryImage(record) {
+    await document.fonts.ready;
+    const canvas=document.createElement('canvas');canvas.width=1200;
+    const ctx=canvas.getContext('2d');ctx.font='32px sans-serif';
+    const lines=[];let line='';
+    for(const char of record.text){if(char==='\n'||ctx.measureText(line+char).width>1040){lines.push(line);line=char==='\n'?'':char;}else line+=char;}lines.push(line);
+    let image=null;
+    if(record.photo){image=new Image();image.src=record.photo;await image.decode();}
+    const photoHeight=image?Math.round(1040*image.height/image.width):0;
+    canvas.height=340+photoHeight+lines.length*50;
+    ctx.fillStyle='#f7f4ec';ctx.fillRect(0,0,1200,canvas.height);
+    ctx.fillStyle='#164b48';ctx.font='italic 56px Georgia';ctx.fillText('TripTune',80,100);
+    ctx.font='32px sans-serif';ctx.fillText(`${record.date} · ${record.place}`.slice(0,48),80,170,1040);
+    if(image)ctx.drawImage(image,80,210,1040,photoHeight);
+    ctx.font='32px sans-serif';lines.forEach((text,i)=>ctx.fillText(text,80,260+photoHeight+i*50));
+    const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));if(!blob)throw new Error('export_failed');
+    const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`TripTune-旅行回忆-${record.date}.png`;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);
+  }
 })();
